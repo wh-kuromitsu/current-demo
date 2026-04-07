@@ -8,7 +8,7 @@ export default function middleware(request) {
   if (basicAuth) {
     const [user, pwd] = atob(basicAuth.split(' ')[1]).split(':')
     if (user === 'admin' && pwd === 'password') {
-      return new Response(null, { status: 200 })
+      return // ← そのまま通過
     }
   }
 
