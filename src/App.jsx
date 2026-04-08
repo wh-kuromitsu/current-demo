@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   LayoutDashboard, ShoppingCart, FileText, Package, Wallet, BarChart2,
-  LogIn, LogOut, CheckCircle2, Loader2, AlertTriangle, ArrowUpRight, ArrowDownRight,
+  LogIn, LogOut, CheckCircle2, Loader2, AlertTriangle, ArrowUpRight, ArrowDownRight, Bell,
   PanelLeftClose, PanelLeftOpen, TrendingUp,
   Users, Building2, Wrench, UserCog, Plus, Pencil, Trash2,
   Search, X, Send, Paperclip, Pin, Clock, ChevronRight,
@@ -30,7 +30,6 @@ tbody tr:hover td{background:#F9FAFB}
 textarea,input,select{font-family:'Noto Sans JP',sans-serif;outline:none}
 `;
 
-/* ─── STATUS BADGE ─── */
 function StatusBadge({ s }) {
   const map = {
     "受付中":{bg:BLUE_L,text:BLUE,border:"#BFDBFE"},"未返信":{bg:"#FEF2F2",text:R,border:"#FECACA"},
@@ -40,17 +39,14 @@ function StatusBadge({ s }) {
     "未入金":{bg:"#FEF2F2",text:R,border:"#FECACA"},"督促済":{bg:AMBER_L,text:AMBER,border:"#FDE68A"},
     "入金済":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"},"AI解析中":{bg:PURPLE_L,text:PURPLE,border:"#DDD6FE"},
     "確認待ち":{bg:BLUE_L,text:BLUE,border:"#BFDBFE"},"下書き":{bg:"#F9FAFB",text:GRAY,border:BORDER},
-    // ⑥ 入金ステータス
     "確認前":{bg:"#F9FAFB",text:GRAY,border:BORDER},
     "一部入金あり":{bg:AMBER_L,text:AMBER,border:"#FDE68A"},
     "過入金あり":{bg:PURPLE_L,text:PURPLE,border:"#DDD6FE"},
-    // ⑥ 督促ステータス
     "督促不要":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"},
     "督促前":{bg:"#F9FAFB",text:GRAY,border:BORDER},
     "督促中（メールのみ）":{bg:AMBER_L,text:AMBER,border:"#FDE68A"},
     "督促中（電話済）":{bg:"#FEF2F2",text:R,border:"#FECACA"},
     "督促完了":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"},
-    // ⑦
     "発送手配中":{bg:"#F0FDFA",text:"#0D9488",border:"#99F6E4"},
   };
   const { bg="#F9FAFB", text=GRAY, border=BORDER } = map[s] || {};
@@ -81,27 +77,51 @@ const INIT_CASES = [
   { id:"C-2036", created:"2026/04/07 07:22", customer:"名古屋プレミアムAuto", ch:"メール", car:"BMW 5シリーズ N52", part:"バルブトロニックモーター", part_no:"N13-01-001", staff:"小嶋", status:"完了", body:"5シリーズN52エンジンのバルブトロニックモーターをお願いします。", phone:"052-678-9012", note:"", images:[], replies:[{from:"担当",text:"発送完了しました。追跡番号: 1234567890",time:"09:00"}] },
 ];
 
-/* ─── ⑧ CHAT BUBBLE ─── */
-function ChatBubble({ from, text, time, isRight, isAI, avatar }) {
+function ChatBubble({ from, text, time, isRight, isAI, avatar, onConfirm, onEdit, confirmed }) {
+  // confirmed = true means AI bubble was already sent (show as normal blue bubble)
+  const showAsAI = isAI && !confirmed;
   return (
-    <div style={{ display:"flex", justifyContent:isRight?"flex-end":"flex-start", marginBottom:10, animation:"chatPop .3s ease both" }}>
+    <div style={{ display:"flex", justifyContent:isRight?"flex-end":"flex-start", marginBottom:showAsAI?14:10, animation:"chatPop .3s ease both" }}>
       {!isRight && avatar && (
         <div style={{ width:24, height:24, borderRadius:"50%", background:`${R}15`, color:R, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0, marginRight:8, marginTop:2 }}>
           {avatar}
         </div>
       )}
-      <div style={{ maxWidth:"75%", display:"flex", flexDirection:"column", alignItems:isRight?"flex-end":"flex-start" }}>
+      <div style={{ maxWidth:"80%", display:"flex", flexDirection:"column", alignItems:isRight?"flex-end":"flex-start" }}>
         {!isRight && from && <div style={{ fontSize:10, color:GRAY_L, marginBottom:3 }}>{from}</div>}
         <div style={{
-          background: isAI ? "#FEF2F2" : isRight ? BLUE : "#F3F4F6",
-          color: isRight ? WHITE : DARK,
+          background: showAsAI ? "#FAFAFA" : (confirmed || (!isAI && isRight)) ? BLUE : isRight ? BLUE : "#F3F4F6",
+          color: showAsAI ? GRAY_L : (isRight || confirmed) ? WHITE : DARK,
           borderRadius: isRight ? "12px 12px 4px 12px" : "12px 12px 12px 4px",
           padding:"9px 13px", fontSize:13, lineHeight:1.7,
-          border: isAI ? `1px solid #FECACA` : "none",
+          border: showAsAI ? `1.5px dashed #D1D5DB` : "none",
+          fontStyle: showAsAI ? "normal" : "normal",
         }}>
-          {isAI && <div style={{ fontSize:10, color:R, fontWeight:700, marginBottom:4 }}>🤖 AI下書き（送信前）</div>}
-          {text}
+          {showAsAI && (
+            <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:5 }}>
+              <span style={{ fontSize:10, color:R, fontWeight:700 }}>🤖 AI下書き（送信前）</span>
+              <span style={{ fontSize:10, color:"#D1D5DB" }}>— 灰色は未送信です</span>
+            </div>
+          )}
+          <span style={{ color: showAsAI ? "#9CA3AF" : "inherit" }}>{text}</span>
         </div>
+        {/* ── AI下書きアクションボタン ── */}
+        {showAsAI && onConfirm && onEdit && (
+          <div style={{ display:"flex", gap:6, marginTop:6 }}>
+            <button
+              onClick={onEdit}
+              style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", fontSize:11, fontWeight:500, background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              <Pencil size={11} /> 編集
+            </button>
+            <button
+              onClick={onConfirm}
+              style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", fontSize:11, fontWeight:700, background:R, color:WHITE, border:"none", borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              <Send size={11} /> 送信確定
+            </button>
+          </div>
+        )}
         <div style={{ fontSize:10, color:GRAY_L, marginTop:3 }}>{time}</div>
       </div>
     </div>
@@ -109,9 +129,9 @@ function ChatBubble({ from, text, time, isRight, isAI, avatar }) {
 }
 
 /* ═══════════════════════════════════════════════════
-   SCREEN 0: 受付ダッシュボード（⑧ 全改修）
+   SCREEN 0: 受付ダッシュボード
    ═══════════════════════════════════════════════════ */
-function DashboardScreen() {
+function DashboardScreen({ setScreen, setInquiryActive }) {
   const [cases, setCases] = useState(INIT_CASES);
   const [ch, setCh] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("未返信");
@@ -125,9 +145,26 @@ function DashboardScreen() {
   const [attachments, setAttachments] = useState([]);
   const [newForm, setNewForm] = useState({ customer:"", ch:"LINE", phone:"", car:"", part:"", note:"", body:"" });
   const [aiDrafting, setAiDrafting] = useState(false);
-  // ⑧D AI LINE flow state per case id
+  // ── AI下書き確認フロー用 ──
+  const [aiDraftMode, setAiDraftMode] = useState(false); // true = AI下書き待ち確認中
   const [aiFlowStep, setAiFlowStep] = useState({});
   const [aiFlowChoice, setAiFlowChoice] = useState({});
+  const [confirmedBubbles, setConfirmedBubbles] = useState({});
+  function confirmBubble(key) {
+    // バブル自体を「送信済み（青）」に切り替えるだけ。replies への追加は行わない（二重表示防止）
+    setConfirmedBubbles(p => ({ ...p, [key]: true }));
+    // ステータスだけ返信済に更新
+    setCases(prev => prev.map(c => c.id !== selected ? c : { ...c, status:"返信済" }));
+    if (statusFilter === "未返信") setStatusFilter("ALL");
+  }
+  const [hiddenBubbles, setHiddenBubbles] = useState({});
+  const [editingBubbleKey, setEditingBubbleKey] = useState(null);
+
+  function editBubble(key, text) {
+    setDraft(text);
+    setAiDraftMode(false);
+    setEditingBubbleKey(key);
+  }
 
   const tabs = [
     { id:"ALL", icon:"📋", label:"全件", count:cases.length },
@@ -147,7 +184,6 @@ function DashboardScreen() {
   const selectedCase = cases.find(c => c.id===selected);
   const unread = cases.filter(c => c.status==="未返信").length;
 
-  // ⑧A fix: after send, item stays visible (change filter to ALL if was 未返信)
   function handleSend() {
     if (!draft.trim() && !attachments.length) return;
     setCases(prev => prev.map(c => c.id !== selected ? c : {
@@ -155,24 +191,35 @@ function DashboardScreen() {
       replies: [...c.replies, { from:"担当", text:draft, time:new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}), attachments }]
     }));
     if (statusFilter === "未返信") setStatusFilter("ALL");
-    setDraft(""); setAttachments([]); setDraftSaved(false);
+    setDraft(""); setAttachments([]); setDraftSaved(false); setAiDraftMode(false);
+    // 編集フローで送信した場合、元のAI下書きバブルを非表示にする
+    if (editingBubbleKey) {
+      setHiddenBubbles(p => ({ ...p, [editingBubbleKey]: true }));
+      setEditingBubbleKey(null);
+    }
   }
 
   function handleStatusChange(id, newStatus) {
     setCases(prev => prev.map(c => c.id !== id ? c : { ...c, status:newStatus }));
   }
 
-  // ⑧C email AI draft
   function handleAIDraft() {
     if (!selectedCase) return;
     setAiDrafting(true);
     setTimeout(() => {
       setDraft(`${selectedCase.customer} ご担当者様\n\nいつもお世話になっております。カレント自動車株式会社パーツ部でございます。\n\nご依頼の「${selectedCase.part || "お問い合わせ部品"}」（品番: ${selectedCase.part_no || "確認中"}）につきまして、在庫を確認いたします。\n\n車種: ${selectedCase.car || "確認中"}\n\n本日中にご回答いたします。何卒よろしくお願いいたします。\n\nカレント自動車株式会社 パーツ部\nTEL: 045-XXX-XXXX`);
       setAiDrafting(false);
+      setAiDraftMode(true); // ← AI下書き確認モードに入る
     }, 800);
   }
 
-  function applyTemplate(t) { setDraft(t.body); setShowTemplates(false); }
+  function handleInquiryToSupplier() {
+    if (!selectedCase) return;
+    setInquiryActive({ caseId: selectedCase.id, part: selectedCase.part, part_no: selectedCase.part_no, car: selectedCase.car, customer: selectedCase.customer });
+    setScreen(1);
+  }
+
+  function applyTemplate(t) { setDraft(t.body); setShowTemplates(false); setAiDraftMode(false); }
   function togglePin(id) { setTemplates(prev => prev.map(t => t.id!==id ? t : { ...t, pinned:!t.pinned })); }
 
   function handleNewSubmit() {
@@ -191,7 +238,6 @@ function DashboardScreen() {
   ];
   const S = { background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" };
 
-  // ⑧D AI LINE flow for C-2041
   const step2041 = aiFlowStep["C-2041"] || 0;
   const choice2041 = aiFlowChoice["C-2041"];
 
@@ -199,7 +245,7 @@ function DashboardScreen() {
     if (c.id !== "C-2041") return null;
     if (step2041 === 0) return (
       <div style={{ marginTop:10, padding:"10px 12px", background:"#FEF2F2", border:`1px solid #FECACA`, borderRadius:8 }}>
-        <div style={{ fontSize:11, color:R, fontWeight:600, marginBottom:6 }}>🤖 AI対話フロー（AI①③）</div>
+        <div style={{ fontSize:11, color:R, fontWeight:600, marginBottom:6 }}>🤖 AI対話フロー</div>
         <div style={{ fontSize:11, color:GRAY, marginBottom:8 }}>AI下書きで部品・車種の確認を自動開始します</div>
         <button onClick={() => setAiFlowStep(p=>({...p,"C-2041":1}))} style={{ padding:"5px 14px", background:R, color:WHITE, border:"none", borderRadius:5, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
           AI対話を開始する
@@ -208,7 +254,7 @@ function DashboardScreen() {
     );
     return (
       <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
-        {step2041 >= 1 && <ChatBubble isRight={true} isAI={true} text={"ご連絡ありがとうございます。車体番号「WBA5R110X0FH12345」のBMW G20の件ですね。\nお問い合わせの部品を確認させてください。"} time="09:12" />}
+        {step2041 >= 1 && !hiddenBubbles["C-2041-b1"] && <ChatBubble isRight={true} isAI={true} confirmed={!!confirmedBubbles["C-2041-b1"]} text={"ご連絡ありがとうございます。車体番号「WBA5R110X0FH12345」のBMW G20の件ですね。\nお問い合わせの部品を確認させてください。"} time="09:12" onConfirm={() => confirmBubble("C-2041-b1")} onEdit={() => editBubble("C-2041-b1","ご連絡ありがとうございます。車体番号「WBA5R110X0FH12345」のBMW G20の件ですね。\nお問い合わせの部品を確認させてください。")} />}
         {step2041 === 1 && (
           <div style={{ display:"flex", justifyContent:"center", margin:"8px 0" }}>
             <div style={{ background:PURPLE_L, border:`1px solid #DDD6FE`, borderRadius:10, padding:"10px 16px", textAlign:"center" }}>
@@ -222,8 +268,8 @@ function DashboardScreen() {
           </div>
         )}
         {step2041 >= 2 && <ChatBubble from="大阪モーター整備" text={choice2041 || "たしかに合っている"} time="09:13" avatar="大" />}
-        {step2041 >= 2 && (choice2041==="たしかに合っている" || !choice2041) && (
-          <ChatBubble isRight={true} isAI={true} text={"お問い合わせは「BMW フロントロアアーム（左）/ 品番: 31126855157」の件と確認いたしました。\nこちらの部品でお間違いないでしょうか？"} time="09:13" />
+        {step2041 >= 2 && (choice2041==="たしかに合っている" || !choice2041) && !hiddenBubbles["C-2041-b2"] && (
+          <ChatBubble isRight={true} isAI={true} confirmed={!!confirmedBubbles["C-2041-b2"]} text={"お問い合わせは「BMW フロントロアアーム（左）/ 品番: 31126855157」の件と確認いたしました。\nこちらの部品でお間違いないでしょうか？"} time="09:13" onConfirm={() => confirmBubble("C-2041-b2")} onEdit={() => editBubble("C-2041-b2","お問い合わせは「BMW フロントロアアーム（左）/ 品番: 31126855157」の件と確認いたしました。\nこちらの部品でお間違いないでしょうか？")} />
         )}
         {step2041 === 2 && (choice2041==="たしかに合っている" || !choice2041) && (
           <div style={{ display:"flex", justifyContent:"center", margin:"8px 0" }}>
@@ -244,7 +290,7 @@ function DashboardScreen() {
         )}
         {step2041 >= 2 && choice2041==="違うかも" && (
           <>
-            <ChatBubble isRight={true} isAI={true} text={"ご確認ありがとうございます。追加情報をいただけますと幸いです。以下の類似候補はいかがでしょうか？"} time="09:13" />
+            {!hiddenBubbles["C-2041-b3"] && <ChatBubble isRight={true} isAI={true} confirmed={!!confirmedBubbles["C-2041-b3"]} text={"ご確認ありがとうございます。追加情報をいただけますと幸いです。以下の類似候補はいかがでしょうか？"} time="09:13" onConfirm={() => confirmBubble("C-2041-b3")} onEdit={() => editBubble("C-2041-b3","ご確認ありがとうございます。追加情報をいただけますと幸いです。以下の類似候補はいかがでしょうか？")} />}
             <div style={{ display:"flex", justifyContent:"center", margin:"6px 0" }}>
               <div style={{ background:PURPLE_L, border:`1px solid #DDD6FE`, borderRadius:8, padding:"10px 14px" }}>
                 <div style={{ fontSize:11, color:PURPLE, fontWeight:600, marginBottom:6 }}>📱 類似候補</div>
@@ -260,11 +306,11 @@ function DashboardScreen() {
             <div style={{ display:"flex", justifyContent:"center", margin:"6px 0" }}>
               <div style={{ background:GREEN_L, border:`1px solid #BBF7D0`, borderRadius:8, padding:"6px 16px", fontSize:12, color:GREEN }}>✓ 部品確定: フロントコントロールアーム左 (31126855157)</div>
             </div>
-            <ChatBubble isRight={true} isAI={true} text={"ありがとうございます。お見積を承りました。在庫を確認いたしますので暫くお待ちください。"} time="09:14" />
+            {!hiddenBubbles["C-2041-b4"] && <ChatBubble isRight={true} isAI={true} confirmed={!!confirmedBubbles["C-2041-b4"]} text={"ありがとうございます。お見積を承りました。在庫を確認いたしますので暫くお待ちください。"} time="09:14" onConfirm={() => confirmBubble("C-2041-b4")} onEdit={() => editBubble("C-2041-b4","ありがとうございます。お見積を承りました。在庫を確認いたしますので暫くお待ちください。")} />}
           </>
         )}
-        {step2041 >= 3 && choice2041==="ぜんぜん違う" && (
-          <ChatBubble isRight={true} isAI={true} text={"ご確認ありがとうございます。適合せず失礼いたしました。恐れ入りますが追加情報を、差し支えない範囲でなるべく多くいただけますと幸いです。"} time="09:14" />
+        {step2041 >= 3 && choice2041==="ぜんぜん違う" && !hiddenBubbles["C-2041-b5"] && (
+          <ChatBubble isRight={true} isAI={true} confirmed={!!confirmedBubbles["C-2041-b5"]} text={"ご確認ありがとうございます。適合せず失礼いたしました。恐れ入りますが追加情報を、差し支えない範囲でなるべく多くいただけますと幸いです。"} time="09:14" onConfirm={() => confirmBubble("C-2041-b5")} onEdit={() => editBubble("C-2041-b5","ご確認ありがとうございます。適合せず失礼いたしました。恐れ入りますが追加情報を、差し支えない範囲でなるべく多くいただけますと幸いです。")} />
         )}
       </div>
     );
@@ -272,7 +318,6 @@ function DashboardScreen() {
 
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      {/* KPI */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
         {kpiCards.map(k => (
           <div key={k.label} style={{ ...S, padding:"14px 16px" }}>
@@ -375,13 +420,31 @@ function DashboardScreen() {
                 </div>
               )}
 
-              {/* ⑧B/D Chat area */}
+              {/* ── 仕入先へ確認ボタン ── */}
+              {selectedCase.part && selectedCase.status !== "完了" && (
+                <div style={{ background:"#F5F3FF", border:`1px solid #DDD6FE`, borderRadius:8, padding:"10px 14px", display:"flex", alignItems:"center", gap:12 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:11, color:PURPLE, fontWeight:600, marginBottom:2 }}>部品が確定したら</div>
+                    <div style={{ fontSize:12, color:DARK }}>
+                      <span style={{ fontFamily:"JetBrains Mono", color:R, fontWeight:600 }}>{selectedCase.part_no}</span>
+                      {" / "}{selectedCase.part}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleInquiryToSupplier}
+                    style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", background:PURPLE, color:WHITE, border:"none", borderRadius:7, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}
+                  >
+                    🔍 この部品で仕入先へ確認
+                  </button>
+                </div>
+              )}
+
+              {/* Chat area */}
               <div>
                 <div style={{ fontSize:11, color:GRAY_L, marginBottom:8 }}>
                   {selectedCase.ch==="LINE" ? "💬 LINEチャット（AI対話フロー）" : "受信メッセージ・やり取り履歴"}
                 </div>
                 <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:14, display:"flex", flexDirection:"column", maxHeight:380, overflowY:"auto" }}>
-                  {/* ⑧B Customer message — LEFT bubble */}
                   <ChatBubble
                     from={selectedCase.customer}
                     text={selectedCase.body}
@@ -389,9 +452,7 @@ function DashboardScreen() {
                     avatar={selectedCase.customer.charAt(0)}
                     isRight={false}
                   />
-                  {/* LINE AI flow for C-2041 */}
                   {selectedCase.ch==="LINE" && renderLineAIFlow(selectedCase)}
-                  {/* ⑧B Replies — RIGHT bubbles */}
                   {selectedCase.replies.map((r, i) => (
                     <ChatBubble key={i} from="担当" text={r.text} time={r.time} isRight={true} />
                   ))}
@@ -407,15 +468,15 @@ function DashboardScreen() {
 
             {selectedCase.status !== "完了" && (
               <div style={{ borderTop:`1px solid ${BORDER}`, padding:14, background:WHITE }}>
+                {/* Template buttons row */}
                 <div style={{ display:"flex", gap:6, marginBottom:8, flexWrap:"wrap" }}>
                   {templates.filter(t=>t.pinned).map(t => (
                     <button key={t.id} onClick={() => applyTemplate(t)} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", fontSize:11, background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:4, cursor:"pointer", fontFamily:"inherit" }}>
                       <Pin size={10} style={{ color:AMBER }} /> {t.title}
                     </button>
                   ))}
-                  {/* ⑧C Email AI draft button */}
                   {selectedCase.ch==="メール" && (
-                    <button onClick={handleAIDraft} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 10px", fontSize:11, fontWeight:600, background:"#FEF2F2", color:R, border:`1px solid #FECACA`, borderRadius:4, cursor:"pointer", fontFamily:"inherit" }}>
+                    <button onClick={handleAIDraft} disabled={aiDrafting} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 10px", fontSize:11, fontWeight:600, background:"#FEF2F2", color:R, border:`1px solid #FECACA`, borderRadius:4, cursor:"pointer", fontFamily:"inherit" }}>
                       {aiDrafting ? <><Loader2 size={10} className="spin" /> 生成中…</> : <>🤖 AI下書き生成</>}
                     </button>
                   )}
@@ -436,34 +497,80 @@ function DashboardScreen() {
                     ))}
                   </div>
                 )}
-                <textarea value={draft} onChange={e=>{setDraft(e.target.value);setDraftSaved(false);}} placeholder="返信内容を入力（テンプレートを選択または直接入力）…" rows={4}
-                  style={{ width:"100%", border:`1px solid ${BORDER}`, borderRadius:7, padding:"9px 12px", fontSize:13, color:DARK, background:WHITE, lineHeight:1.7, marginBottom:8, resize:"none" }} />
-                {attachments.length > 0 && (
-                  <div style={{ display:"flex", gap:6, marginBottom:8, flexWrap:"wrap" }}>
-                    {attachments.map((a,i) => (
-                      <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", background:BLUE_L, color:BLUE, border:`1px solid #BFDBFE`, borderRadius:4, fontSize:11 }}>
-                        <FileImage size={11} /> {a}
-                        <button onClick={() => setAttachments(p=>p.filter((_,j)=>j!==i))} style={{ background:"none", border:"none", cursor:"pointer", color:BLUE, display:"flex" }}><X size={10} /></button>
+
+                {/* ── AI下書き確認モード ── */}
+                {aiDraftMode ? (
+                  <div>
+                    {/* AI下書きバナー */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 10px", background:"#FEF2F2", border:`1px solid #FECACA`, borderRadius:"6px 6px 0 0", borderBottom:"none" }}>
+                      <span style={{ fontSize:11, color:R, fontWeight:700 }}>🤖 AI下書き — 送信前に内容をご確認ください</span>
+                    </div>
+                    {/* Gray readonly textarea */}
+                    <textarea
+                      value={draft}
+                      readOnly
+                      rows={5}
+                      style={{ width:"100%", border:`1px solid #FECACA`, borderRadius:"0 0 7px 7px", padding:"9px 12px", fontSize:13, color:"#9CA3AF", background:"#FAFAFA", lineHeight:1.7, marginBottom:8, resize:"none", cursor:"default" }}
+                    />
+                    {/* 送信確定 / 編集 ボタン */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <button
+                        onClick={() => setAiDraftMode(false)}
+                        style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:7, fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit" }}
+                      >
+                        <Pencil size={13} /> 編集する
+                      </button>
+                      <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
+                        <select style={{ padding:"6px 8px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, background:WHITE }}>
+                          <option>📧 メール</option><option>💬 LINE</option><option>📠 FAX</option>
+                        </select>
+                        <button
+                          onClick={handleSend}
+                          style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 18px", background:R, color:WHITE, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
+                        >
+                          <Send size={14} /> 送信確定
+                        </button>
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* 通常の編集モード */
+                  <div>
+                    <textarea
+                      value={draft}
+                      onChange={e => { setDraft(e.target.value); setDraftSaved(false); }}
+                      placeholder="返信内容を入力（テンプレートを選択または直接入力）…"
+                      rows={4}
+                      style={{ width:"100%", border:`1px solid ${BORDER}`, borderRadius:7, padding:"9px 12px", fontSize:13, color:DARK, background:WHITE, lineHeight:1.7, marginBottom:8, resize:"none" }}
+                    />
+                    {attachments.length > 0 && (
+                      <div style={{ display:"flex", gap:6, marginBottom:8, flexWrap:"wrap" }}>
+                        {attachments.map((a,i) => (
+                          <div key={i} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", background:BLUE_L, color:BLUE, border:`1px solid #BFDBFE`, borderRadius:4, fontSize:11 }}>
+                            <FileImage size={11} /> {a}
+                            <button onClick={() => setAttachments(p=>p.filter((_,j)=>j!==i))} style={{ background:"none", border:"none", cursor:"pointer", color:BLUE, display:"flex" }}><X size={10} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <button onClick={() => setAttachments(p=>[...p,`image_${p.length+1}.jpg`])} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 10px", fontSize:11, background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
+                        <Paperclip size={13} /> 画像添付
+                      </button>
+                      <button onClick={() => { setDraftSaved(true); setTimeout(()=>setDraftSaved(false),2000); }} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 10px", fontSize:11, background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
+                        {draftSaved ? <><CheckCircle2 size={12} style={{ color:GREEN }}/> 保存済</> : <>下書き保存</>}
+                      </button>
+                      <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
+                        <select style={{ padding:"6px 8px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, background:WHITE }}>
+                          <option>📧 メール</option><option>💬 LINE</option><option>📠 FAX</option>
+                        </select>
+                        <button onClick={handleSend} disabled={!draft.trim()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 16px", background:draft.trim()?R:"#F3F4F6", color:draft.trim()?WHITE:GRAY_L, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:draft.trim()?"pointer":"default", fontFamily:"inherit" }}>
+                          <Send size={14} /> 送信
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <button onClick={() => setAttachments(p=>[...p,`image_${p.length+1}.jpg`])} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 10px", fontSize:11, background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
-                    <Paperclip size={13} /> 画像添付
-                  </button>
-                  <button onClick={() => {setDraftSaved(true);setTimeout(()=>setDraftSaved(false),2000);}} style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 10px", fontSize:11, background:WHITE, color:GRAY, border:`1px solid ${BORDER}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
-                    {draftSaved ? <><CheckCircle2 size={12} style={{ color:GREEN }}/> 保存済</> : <>下書き保存</>}
-                  </button>
-                  <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
-                    <select style={{ padding:"6px 8px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, background:WHITE }}>
-                      <option>📧 メール</option><option>💬 LINE</option><option>📠 FAX</option>
-                    </select>
-                    <button onClick={handleSend} disabled={!draft.trim()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 16px", background:draft.trim()?R:"#F3F4F6", color:draft.trim()?WHITE:GRAY_L, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:draft.trim()?"pointer":"default", fontFamily:"inherit" }}>
-                      <Send size={14} /> 送信
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -509,7 +616,6 @@ function DashboardScreen() {
   );
 }
 
-/* ─── COUNTER ─── */
 function Counter({ target, prefix="¥", suffix="", duration=1000, run }) {
   const [val, setVal] = useState(0);
   const raf = useRef(null);
@@ -529,14 +635,40 @@ function Counter({ target, prefix="¥", suffix="", duration=1000, run }) {
 }
 
 /* ═══════════════════════════════════════════════════
-   SCREEN 1: 仕入先比較（① 社外品 + マルチセレクト）
+   SCREEN 1: 仕入先比較（在庫照会フロー付き）
    ═══════════════════════════════════════════════════ */
-function SupplierScreen() {
+function SupplierScreen({ inquiryActive, clearInquiry }) {
   const [filters, setFilters] = useState(["全品種"]);
   const [run, setRun] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setRun(true), 300); return () => clearTimeout(t); }, []);
+  const [orderTarget, setOrderTarget] = useState(null); // 発注対象サプライヤー
+  const [orderEmailBody, setOrderEmailBody] = useState("");
+  const [orderSent, setOrderSent] = useState(false);
 
-  // ① Multi-select toggle logic
+  // ── 照会フロー用ステート ──
+  const [inquiryPhase, setInquiryPhase] = useState(inquiryActive ? "loading" : "idle");
+  // phase: "idle" | "loading" | "done"
+  const [inquiryResults, setInquiryResults] = useState({});
+
+  useEffect(() => {
+    if (inquiryActive && inquiryPhase === "loading") {
+      // 1秒ロード後に結果表示
+      const t = setTimeout(() => {
+        setInquiryResults({
+          "TOHO自動車":       { status:"在庫確認中", method:"システム連携", color:BLUE,   bg:BLUE_L,   border:"#BFDBFE", icon:"🔄" },
+          "Ts.CO.Ltd":        { status:"在庫あり・即時確認済", method:"システム即時反映", color:GREEN,  bg:GREEN_L,  border:"#BBF7D0", icon:"✅" },
+          "ヤナセオートシステムズ": { status:"FAX送付済", method:"FAX送付済",  color:AMBER,  bg:AMBER_L,  border:"#FDE68A", icon:"📠" },
+          "パーツダイレクト":  { status:"FAX送付済", method:"FAX送付済",  color:AMBER,  bg:AMBER_L,  border:"#FDE68A", icon:"📠" },
+        });
+        setInquiryPhase("done");
+        setRun(true);
+      }, 1200);
+      return () => clearTimeout(t);
+    } else if (!inquiryActive) {
+      const t = setTimeout(() => setRun(true), 300);
+      return () => clearTimeout(t);
+    }
+  }, [inquiryActive, inquiryPhase]);
+
   function toggleFilter(f) {
     if (f === "全品種") { setFilters(["全品種"]); return; }
     setFilters(prev => {
@@ -549,7 +681,6 @@ function SupplierScreen() {
     });
   }
 
-  // ① Added 社外品 supplier
   const suppliers = [
     { name:"TOHO自動車", type:"純正品", typeKey:"純正", price:11305, days:3, score:74, badge:"💰 最安値（純正）", badgeColor:BLUE_L, badgeText:BLUE, borderColor:BORDER, highlight:false },
     { name:"Ts.CO.Ltd", type:"優良品(OEM)", typeKey:"優良", price:7800, days:2, score:91, badge:"🏆 AI推奨", badgeColor:"#FEF2F2", badgeText:R, borderColor:R, highlight:true, reason:"最速納期 / 過去48件クレームゼロ / 中価格帯" },
@@ -557,11 +688,11 @@ function SupplierScreen() {
     { name:"パーツダイレクト", type:"社外品", typeKey:"社外", price:5200, days:4, score:58, badge:"💲 格安", badgeColor:"#F0FDFA", badgeText:"#0D9488", borderColor:"#99F6E4", highlight:false, reason:"保証6ヶ月 / 格安帯 / クレーム履歴3件" },
   ];
 
-  const filterOpts = ["全品種","純正のみ","優良品のみ","社外品"];
+  const filterOpts = ["全品種","純正","優良品","社外品"];
   const visible = filters.includes("全品種") ? suppliers : suppliers.filter(s => {
     return filters.some(f => {
-      if (f==="純正のみ") return s.typeKey==="純正";
-      if (f==="優良品のみ") return s.typeKey==="優良";
+      if (f==="純正") return s.typeKey==="純正";
+      if (f==="優良品") return s.typeKey==="優良";
       if (f==="社外品") return s.typeKey==="社外";
       return true;
     });
@@ -571,82 +702,370 @@ function SupplierScreen() {
 
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:18 }}>
+      {/* 照会元情報 */}
       <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:"14px 20px", display:"flex", gap:28, alignItems:"center", boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>
-        {[{l:"対象部品",v:"フロントコントロールアーム左"},{l:"品番",v:"31126855157",red:true,mono:true},{l:"車両",v:"BMW G20 3シリーズ 2021年式"}].map(r=>(
-          <div key={r.l}><div style={{ fontSize:11, color:GRAY_L, marginBottom:2 }}>{r.l}</div>
-          <div style={{ fontSize:13, fontWeight:600, color:r.red?R:DARK, fontFamily:r.mono?"JetBrains Mono":undefined }}>{r.v}</div></div>
-        ))}
-      </div>
-
-      {/* ① Multi-select filters */}
-      <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-        {filterOpts.map(f => {
-          const active = f==="全品種" ? filters.includes("全品種") : filters.includes(f);
-          return (
-            <button key={f} onClick={() => toggleFilter(f)} style={{ padding:"7px 16px", borderRadius:20, fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit", background:active?R:WHITE, color:active?WHITE:GRAY, border:`1px solid ${active?R:BORDER}`, transition:"all .15s", display:"flex", alignItems:"center", gap:5 }}>
-              {active && f!=="全品種" && <CheckCircle2 size={13} />}
-              {f}
-            </button>
-          );
-        })}
-        {!filters.includes("全品種") && (
-          <div style={{ padding:"7px 10px", fontSize:12, color:GRAY_L, display:"flex", alignItems:"center" }}>
-            {filters.length}種類選択中
-          </div>
+        {inquiryActive ? (
+          <>
+            <div style={{ display:"flex", gap:28, flex:1 }}>
+              {[
+                {l:"受付案件",v:inquiryActive.caseId,red:true,mono:true},
+                {l:"顧客",v:inquiryActive.customer},
+                {l:"対象部品",v:inquiryActive.part || "フロントコントロールアーム左"},
+                {l:"品番",v:inquiryActive.part_no || "31126855157",red:true,mono:true},
+                {l:"車両",v:inquiryActive.car || "BMW G20 3シリーズ 2021年式"},
+              ].map(r=>(
+                <div key={r.l}><div style={{ fontSize:11, color:GRAY_L, marginBottom:2 }}>{r.l}</div>
+                <div style={{ fontSize:13, fontWeight:600, color:r.red?R:DARK, fontFamily:r.mono?"JetBrains Mono":undefined }}>{r.v}</div></div>
+              ))}
+            </div>
+            <button onClick={clearInquiry} style={{ fontSize:11, color:GRAY_L, background:"none", border:`1px solid ${BORDER}`, borderRadius:5, padding:"4px 10px", cursor:"pointer", fontFamily:"inherit" }}>照会解除</button>
+          </>
+        ) : (
+          <>
+            {[{l:"対象部品",v:"フロントコントロールアーム左"},{l:"品番",v:"31126855157",red:true,mono:true},{l:"車両",v:"BMW G20 3シリーズ 2021年式"}].map(r=>(
+              <div key={r.l}><div style={{ fontSize:11, color:GRAY_L, marginBottom:2 }}>{r.l}</div>
+              <div style={{ fontSize:13, fontWeight:600, color:r.red?R:DARK, fontFamily:r.mono?"JetBrains Mono":undefined }}>{r.v}</div></div>
+            ))}
+          </>
         )}
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:`repeat(${visible.length},1fr)`, gap:16 }}>
-        {visible.map((s, i) => {
-          const tc = typeC[s.type] || {bg:"#F9FAFB",c:GRAY};
-          return (
-            <div key={s.name} style={{ background:WHITE, borderRadius:10, border:`1.5px solid ${s.borderColor}`, padding:22, boxShadow:s.highlight?`0 4px 20px ${R}20`:"0 1px 3px rgba(0,0,0,0.05)", animation:`slideR .35s ${i*.1}s ease both`, opacity:0 }}>
-              {s.badge && <span style={{ display:"inline-block", background:s.badgeColor, color:s.badgeText, fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:5, marginBottom:12 }}>{s.badge}</span>}
-              <div style={{ fontWeight:700, fontSize:16, color:DARK, marginBottom:4 }}>{s.name}</div>
-              <div style={{ marginBottom:14 }}>
-                <span style={{ background:tc.bg, color:tc.c, fontSize:11, fontWeight:600, padding:"2px 10px", borderRadius:4 }}>{s.type}</span>
+      {/* ── AIが確認中ローディング ── */}
+      {inquiryPhase === "loading" && (
+        <div style={{ background:PURPLE_L, border:`1px solid #DDD6FE`, borderRadius:10, padding:"20px 24px", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
+          <Loader2 size={28} style={{ color:PURPLE, animation:"spin .9s linear infinite" }} />
+          <div style={{ fontSize:14, fontWeight:600, color:PURPLE }}>AIが仕入先へ在庫確認・見積依頼を送信中…</div>
+          <div style={{ fontSize:12, color:GRAY, textAlign:"center", lineHeight:1.7 }}>
+            各仕入先のシステム接続・FAX送付を並行処理しています。<br/>しばらくお待ちください。
+          </div>
+          <div style={{ display:"flex", gap:16, marginTop:4 }}>
+            {suppliers.map(s => (
+              <div key={s.name} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 12px", background:WHITE, borderRadius:7, border:`1px solid #DDD6FE`, fontSize:12, color:GRAY }}>
+                <Loader2 size={12} style={{ color:PURPLE, animation:"spin .9s linear infinite" }} />
+                {s.name}
               </div>
-              <div style={{ marginBottom:16 }}>
-                <div style={{ fontSize:11, color:GRAY_L, marginBottom:2 }}>仕入単価</div>
-                <div style={{ fontSize:30, fontWeight:700, color:s.highlight?R:DARK, fontFamily:"JetBrains Mono" }}><Counter target={s.price} run={run} /></div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 照会結果バナー（done時） ── */}
+      {inquiryPhase === "done" && (
+        <div style={{ background:GREEN_L, border:`1px solid #BBF7D0`, borderRadius:10, padding:"12px 18px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:GREEN, marginBottom:6 }}>✅ 仕入先への在庫確認・見積依頼が完了しました</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {Object.entries(inquiryResults).map(([name, res]) => (
+              <div key={name} style={{ display:"flex", alignItems:"center", gap:6, padding:"4px 12px", background:res.bg, border:`1px solid ${res.border}`, borderRadius:6, fontSize:11, color:res.color, fontWeight:500 }}>
+                <span>{res.icon}</span>
+                <span style={{ fontWeight:600 }}>{name}</span>
+                <span style={{ fontWeight:400 }}>— {res.method}</span>
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
-                {[{l:"納期",v:s.days,suffix:"営業日",c:s.days===2?GREEN:DARK},{l:"スコア",v:s.score,suffix:"pt",c:s.score>=90?GREEN:s.score>=75?AMBER:GRAY}].map(m=>(
-                  <div key={m.l} style={{ background:"#F9FAFB", borderRadius:8, padding:10, border:`1px solid ${BORDER}` }}>
-                    <div style={{ fontSize:10, color:GRAY_L, marginBottom:2 }}>{m.l}</div>
-                    <div style={{ fontSize:18, fontWeight:700, color:m.c, fontFamily:"JetBrains Mono" }}><Counter target={m.v} prefix="" suffix={m.suffix} run={run} duration={800} /></div>
-                  </div>
-                ))}
-              </div>
-              {s.reason && <div style={{ background:s.highlight?"#FEF2F2":"#F9FAFB", border:`1px solid ${s.highlight?"#FECACA":BORDER}`, borderRadius:8, padding:10, marginBottom:16 }}>
-                <div style={{ fontSize:10, color:s.highlight?R:GRAY, fontWeight:700, marginBottom:3 }}>AI推奨理由</div>
-                <div style={{ fontSize:11, color:DARK }}>{s.reason}</div>
-              </div>}
-              <button style={{ width:"100%", padding:"10px 0", borderRadius:8, fontSize:13, fontWeight:600, background:s.highlight?R:WHITE, color:s.highlight?WHITE:GRAY, border:`1px solid ${s.highlight?R:BORDER}`, cursor:"pointer", fontFamily:"inherit" }}>
-                {s.highlight ? "この仕入先で発注する →" : "選択する"}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 平常時は loading 中でもフィルタ非表示 ── */}
+      {inquiryPhase !== "loading" && (
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {filterOpts.map(f => {
+            const active = f==="全品種" ? filters.includes("全品種") : filters.includes(f);
+            return (
+              <button key={f} onClick={() => toggleFilter(f)} style={{ padding:"7px 16px", borderRadius:20, fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit", background:active?R:WHITE, color:active?WHITE:GRAY, border:`1px solid ${active?R:BORDER}`, transition:"all .15s", display:"flex", alignItems:"center", gap:5 }}>
+                {active && f!=="全品種" && <CheckCircle2 size={13} />}
+                {f}
               </button>
+            );
+          })}
+          {!filters.includes("全品種") && (
+            <div style={{ padding:"7px 10px", fontSize:12, color:GRAY_L, display:"flex", alignItems:"center" }}>
+              {filters.length}種類選択中
             </div>
-          );
-        })}
-      </div>
+          )}
+        </div>
+      )}
+
+      {inquiryPhase !== "loading" && (
+        <div style={{ display:"grid", gridTemplateColumns:`repeat(${visible.length},1fr)`, gap:16 }}>
+          {visible.map((s, i) => {
+            const tc = typeC[s.type] || {bg:"#F9FAFB",c:GRAY};
+            const inqRes = inquiryResults[s.name];
+            return (
+              <div key={s.name} style={{ background:WHITE, borderRadius:10, border:`1.5px solid ${s.borderColor}`, padding:22, boxShadow:s.highlight?`0 4px 20px ${R}20`:"0 1px 3px rgba(0,0,0,0.05)", animation:`slideR .35s ${i*.1}s ease both`, opacity:0 }}>
+                {s.badge && <span style={{ display:"inline-block", background:s.badgeColor, color:s.badgeText, fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:5, marginBottom:12 }}>{s.badge}</span>}
+
+                {/* ── 照会ステータスバッジ ── */}
+                {inqRes && (
+                  <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:10, padding:"4px 10px", background:inqRes.bg, border:`1px solid ${inqRes.border}`, borderRadius:5, fontSize:11, color:inqRes.color, fontWeight:600 }}>
+                    <span>{inqRes.icon}</span> {inqRes.status}
+                  </div>
+                )}
+
+                <div style={{ fontWeight:700, fontSize:16, color:DARK, marginBottom:4 }}>{s.name}</div>
+                <div style={{ marginBottom:14 }}>
+                  <span style={{ background:tc.bg, color:tc.c, fontSize:11, fontWeight:600, padding:"2px 10px", borderRadius:4 }}>{s.type}</span>
+                </div>
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:11, color:GRAY_L, marginBottom:2 }}>仕入単価</div>
+                  <div style={{ fontSize:30, fontWeight:700, color:s.highlight?R:DARK, fontFamily:"JetBrains Mono" }}><Counter target={s.price} run={run} /></div>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+                  {[{l:"納期",v:s.days,suffix:"営業日",c:s.days===2?GREEN:DARK},{l:"スコア",v:s.score,suffix:"pt",c:s.score>=90?GREEN:s.score>=75?AMBER:GRAY}].map(m=>(
+                    <div key={m.l} style={{ background:"#F9FAFB", borderRadius:8, padding:10, border:`1px solid ${BORDER}` }}>
+                      <div style={{ fontSize:10, color:GRAY_L, marginBottom:2 }}>{m.l}</div>
+                      <div style={{ fontSize:18, fontWeight:700, color:m.c, fontFamily:"JetBrains Mono" }}><Counter target={m.v} prefix="" suffix={m.suffix} run={run} duration={800} /></div>
+                    </div>
+                  ))}
+                </div>
+                {s.reason && <div style={{ background:s.highlight?"#FEF2F2":"#F9FAFB", border:`1px solid ${s.highlight?"#FECACA":BORDER}`, borderRadius:8, padding:10, marginBottom:16 }}>
+                  <div style={{ fontSize:10, color:s.highlight?R:GRAY, fontWeight:700, marginBottom:3 }}>AI推奨理由</div>
+                  <div style={{ fontSize:11, color:DARK }}>{s.reason}</div>
+                </div>}
+                <button
+                  onClick={() => {
+                    if (s.highlight || true) {
+                      const partName = inquiryActive?.part || "フロントコントロールアーム左";
+                      const partNo   = inquiryActive?.part_no || "31126855157";
+                      const customer = inquiryActive?.customer || "大阪モーター整備";
+                      const car      = inquiryActive?.car || "BMW G20 3シリーズ";
+                      setOrderTarget(s);
+                      setOrderSent(false);
+                      setOrderEmailBody(
+`${s.name} ご担当者様
+
+いつもお世話になっております。
+カレント自動車株式会社 パーツ部でございます。
+
+下記の通りご発注申し上げます。
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+■ 発注品目
+  品番　: ${partNo}
+  品名　: ${partName}
+  数量　: 1個
+  仕入単価: ¥${s.price.toLocaleString()}
+  お届け先: ${customer}（${car}）
+
+■ お届け先住所
+  〒XXX-XXXX 大阪府大阪市…
+  ${customer} 御中
+
+■ 納期希望
+  お早めにご手配いただけますと幸いです。
+  （目安: ${s.days}営業日）
+
+■ 直送のお願い
+  お手数ですが、上記お届け先へ直送を
+  お願いいたします。伝票には「カレント
+  自動車株式会社」とご記載ください。
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+ご不明な点がございましたらお気軽にご連絡ください。
+どうぞよろしくお願いいたします。
+
+カレント自動車株式会社 パーツ部
+TEL: 045-XXX-XXXX
+MAIL: parts@currentmotor.co.jp`
+                      );
+                    }
+                  }}
+                  style={{ width:"100%", padding:"10px 0", borderRadius:8, fontSize:13, fontWeight:600, background:s.highlight?R:WHITE, color:s.highlight?WHITE:GRAY, border:`1px solid ${s.highlight?R:BORDER}`, cursor:"pointer", fontFamily:"inherit" }}
+                >
+                  {s.highlight ? "この仕入先で発注する →" : "選択する"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {/* ── 発注指示メール パネル ── */}
+      {orderTarget && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:60, animation:"fadeUp .2s ease both" }}>
+          <div style={{ background:WHITE, borderRadius:14, width:640, maxHeight:"88vh", overflow:"auto", boxShadow:"0 24px 80px rgba(0,0,0,0.25)", display:"flex", flexDirection:"column" }}>
+            {/* ── Header ── */}
+            {!orderSent ? (
+              <>
+                <div style={{ padding:"18px 24px", borderBottom:`1px solid ${BORDER}`, display:"flex", alignItems:"center", gap:14 }}>
+                  <div style={{ width:38, height:38, borderRadius:9, background:`${R}12`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <Send size={17} style={{ color:R }} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:15, fontWeight:700, color:DARK }}>発注指示メール作成</div>
+                    <div style={{ fontSize:11, color:GRAY_L, marginTop:2 }}>
+                      送信先: <span style={{ fontWeight:600, color:DARK }}>{orderTarget.name}</span>
+                      　仕入単価: <span style={{ fontFamily:"JetBrains Mono", color:R, fontWeight:700 }}>¥{orderTarget.price.toLocaleString()}</span>
+                      　納期: <span style={{ color:GREEN, fontWeight:600 }}>{orderTarget.days}営業日</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setOrderTarget(null)} style={{ background:"none", border:"none", cursor:"pointer", color:GRAY_L, display:"flex" }}>
+                    <X size={18} />
+                  </button>
+                </div>
+                <div style={{ padding:"16px 24px", display:"flex", flexDirection:"column", gap:12 }}>
+                  {/* Supplier type badge */}
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    <span style={{ background:orderTarget.highlight?"#FEF2F2":BLUE_L, color:orderTarget.highlight?R:BLUE, fontSize:11, fontWeight:700, padding:"3px 12px", borderRadius:20, border:`1px solid ${orderTarget.highlight?"#FECACA":"#BFDBFE"}` }}>
+                      {orderTarget.highlight ? "🏆 AI推奨サプライヤー" : "選択サプライヤー"}
+                    </span>
+                    <span style={{ background:GREEN_L, color:GREEN, fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, border:"1px solid #BBF7D0" }}>
+                      スコア {orderTarget.score}pt
+                    </span>
+                  </div>
+                  {/* Email fields */}
+                  {[
+                    ["宛先", `${orderTarget.name} ご担当者様`],
+                    ["件名", `【発注依頼】${inquiryActive?.part || "フロントコントロールアーム左"} / 品番: ${inquiryActive?.part_no || "31126855157"}`],
+                    ["送信元", "小嶋 鹿乃雲 <kojima@currentmotor.co.jp>"],
+                  ].map(([lbl, val]) => (
+                    <div key={lbl} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ fontSize:11, color:GRAY_L, width:42, flexShrink:0, textAlign:"right" }}>{lbl}</div>
+                      <input defaultValue={val} style={{ flex:1, padding:"7px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, background:"#FAFAFA" }} />
+                    </div>
+                  ))}
+                  <div style={{ borderTop:`1px solid ${BORDER}`, paddingTop:12 }}>
+                    <div style={{ fontSize:11, color:GRAY_L, marginBottom:6 }}>本文</div>
+                    <textarea
+                      value={orderEmailBody}
+                      onChange={e => setOrderEmailBody(e.target.value)}
+                      rows={16}
+                      style={{ width:"100%", padding:"10px 12px", border:`1px solid ${BORDER}`, borderRadius:7, fontSize:12, color:DARK, background:WHITE, lineHeight:1.8, resize:"vertical", fontFamily:"'Noto Sans JP',sans-serif" }}
+                    />
+                  </div>
+                  {/* Attachments hint */}
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", background:BLUE_L, color:BLUE, border:"1px solid #BFDBFE", borderRadius:5, fontSize:11, fontWeight:500 }}>
+                      <FileImage size={12} /> 発注書PDF（自動生成）
+                    </div>
+                    <div style={{ fontSize:11, color:GRAY_L }}>自動添付されます</div>
+                  </div>
+                </div>
+                <div style={{ padding:"14px 24px", borderTop:`1px solid ${BORDER}`, background:"#FAFAFA", display:"flex", gap:10, justifyContent:"flex-end" }}>
+                  <button onClick={() => setOrderTarget(null)} style={{ padding:"9px 18px", border:`1px solid ${BORDER}`, borderRadius:8, background:WHITE, color:GRAY, cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={() => setOrderSent(true)}
+                    style={{ display:"flex", alignItems:"center", gap:7, padding:"9px 22px", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
+                  >
+                    <Send size={14} /> 発注メールを送信する
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* ── 送信完了画面 ── */
+              <div style={{ padding:"48px 40px", display:"flex", flexDirection:"column", alignItems:"center", gap:20, textAlign:"center" }}>
+                <div style={{ width:64, height:64, borderRadius:"50%", background:GREEN_L, border:"2px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center", animation:"fadeUp .4s ease both" }}>
+                  <CheckCircle2 size={30} style={{ color:GREEN }} />
+                </div>
+                <div style={{ animation:"fadeUp .4s .1s ease both", opacity:0 }}>
+                  <div style={{ fontSize:18, fontWeight:700, color:DARK, marginBottom:8 }}>発注メールを送信しました</div>
+                  <div style={{ fontSize:13, color:GRAY, lineHeight:1.8 }}>
+                    <span style={{ fontWeight:600, color:DARK }}>{orderTarget.name}</span> へ発注指示メールを送付しました。<br/>
+                    発注書PDFも自動添付されています。
+                  </div>
+                </div>
+                {/* Summary card */}
+                <div style={{ width:"100%", background:"#FAFAFA", border:`1px solid ${BORDER}`, borderRadius:10, padding:"16px 20px", animation:"fadeUp .4s .2s ease both", opacity:0 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, textAlign:"left" }}>
+                    {[
+                      ["仕入先", orderTarget.name],
+                      ["品番", inquiryActive?.part_no || "31126855157"],
+                      ["品名", inquiryActive?.part || "フロントコントロールアーム左"],
+                      ["仕入単価", `¥${orderTarget.price.toLocaleString()}`],
+                      ["納期目安", `${orderTarget.days}営業日`],
+                      ["お届け先", inquiryActive?.customer || "大阪モーター整備"],
+                    ].map(([lbl, val]) => (
+                      <div key={lbl} style={{ padding:"8px 12px", background:WHITE, borderRadius:7, border:`1px solid ${BORDER}` }}>
+                        <div style={{ fontSize:10, color:GRAY_L, marginBottom:2 }}>{lbl}</div>
+                        <div style={{ fontSize:12, fontWeight:600, color:lbl==="品番"||lbl==="仕入単価"?R:DARK, fontFamily:lbl==="品番"?"JetBrains Mono":undefined }}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Next steps */}
+                <div style={{ width:"100%", background:BLUE_L, border:"1px solid #BFDBFE", borderRadius:10, padding:"12px 16px", textAlign:"left", animation:"fadeUp .4s .3s ease both", opacity:0 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:BLUE, marginBottom:8 }}>次のステップ</div>
+                  {[
+                    "仕入先からの発送確認連絡をお待ちください",
+                    "追跡番号が届いたら「受注・発送」ページで登録します",
+                    "発送完了後、請求書を自動発行します",
+                  ].map((step, i) => (
+                    <div key={i} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:i<2?6:0 }}>
+                      <span style={{ width:18, height:18, borderRadius:"50%", background:BLUE, color:WHITE, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0, marginTop:1 }}>{i+1}</span>
+                      <span style={{ fontSize:12, color:DARK }}>{step}</span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => { setOrderTarget(null); setOrderSent(false); }}
+                  style={{ padding:"10px 28px", background:DARK, color:WHITE, border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", animation:"fadeUp .4s .4s ease both", opacity:0 }}
+                >
+                  閉じる
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════
-   SCREEN 2: 見積作成（③ aiMargin=28）
+   SCREEN 2: 見積作成
    ═══════════════════════════════════════════════════ */
 function QuoteScreen() {
   const [margin, setMargin] = useState(20);
   const [aiApplied, setAiApplied] = useState(false);
   const [sent, setSent] = useState(false);
   const [method, setMethod] = useState("メール");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const cost = 7800;
-  const aiMargin = 28; // ③ changed from 18 to 28
+  const aiMargin = 28;
   const raw = cost * (1 + margin/100);
   const final = Math.ceil(raw/100) * 100;
+  const tax = Math.round(final * 0.1);
+  const total = final + tax;
   const box = { background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:20, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" };
+
+  const emailBody = `大阪モーター整備 ご担当者様
+
+いつもお世話になっております。
+カレント自動車株式会社 パーツ部でございます。
+
+先ほどのお問い合わせについて、お見積もりをご案内いたします。
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+■ お見積内容
+  見積番号: Q-2041
+  品番　　: 31126855157
+  品名　　: フロントコントロールアーム左
+  　　　　  （BMW G20 / OEM品）
+  数量　　: 1個
+  単価　　: ¥${final.toLocaleString()}
+  消費税  : ¥${tax.toLocaleString()}
+  合計　　: ¥${total.toLocaleString()}（税込）
+
+■ 納期目安
+  2営業日（在庫あり）
+
+■ お支払い条件
+  月末締め翌月末払い
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+見積書PDFを添付しております。
+ご確認のほどよろしくお願いいたします。
+
+ご不明な点はお気軽にお申し付けください。
+
+カレント自動車株式会社 パーツ部
+小嶋 鹿乃雲
+TEL: 045-XXX-XXXX
+MAIL: kojima@currentmotor.co.jp`;
+
   return (
+    <>
     <div className="anim-fade-up" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
       <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
         <div style={box}>
@@ -736,18 +1155,141 @@ function QuoteScreen() {
               </button>
             ))}
           </div>
-          {!sent
-            ? <button onClick={() => setSent(true)} style={{ width:"100%", padding:"12px 0", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>見積書を送付する →</button>
-            : <div style={{ textAlign:"center", padding:"12px 0", color:GREEN, fontWeight:600, fontSize:14 }}>✓ 送付完了（{method} / {new Date().toLocaleTimeString("ja-JP")}）</div>
-          }
+          {!sent ? (
+            <button
+              onClick={() => { if (method === "メール") { setShowEmailModal(true); } else { setSent(true); } }}
+              style={{ width:"100%", padding:"12px 0", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              {method === "メール" ? "📧 見積書をメール送付する →" : "📠 FAXで送付する →"}
+            </button>
+          ) : (
+            <div style={{ textAlign:"center", padding:"12px 0", color:GREEN, fontWeight:600, fontSize:14 }}>
+              ✓ 送付完了（{method} / {new Date().toLocaleTimeString("ja-JP")}）
+            </div>
+          )}
         </div>
       </div>
     </div>
+
+    {/* ── 見積メール作成モーダル ── */}
+    {showEmailModal && (
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:60 }}>
+        <div style={{ background:WHITE, borderRadius:14, width:660, maxHeight:"90vh", overflow:"auto", boxShadow:"0 24px 80px rgba(0,0,0,0.25)", display:"flex", flexDirection:"column" }}>
+          {!emailSent ? (
+            <>
+              {/* Header */}
+              <div style={{ padding:"18px 24px", borderBottom:`1px solid ${BORDER}`, display:"flex", alignItems:"center", gap:14 }}>
+                <div style={{ width:38, height:38, borderRadius:9, background:`${BLUE}12`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <Mail size={17} style={{ color:BLUE }} />
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:DARK }}>見積書メール作成</div>
+                  <div style={{ fontSize:11, color:GRAY_L, marginTop:2 }}>
+                    送信先: <span style={{ fontWeight:600, color:DARK }}>大阪モーター整備</span>
+                    　合計: <span style={{ fontFamily:"JetBrains Mono", color:R, fontWeight:700 }}>¥{total.toLocaleString()}（税込）</span>
+                  </div>
+                </div>
+                <button onClick={() => setShowEmailModal(false)} style={{ background:"none", border:"none", cursor:"pointer", color:GRAY_L, display:"flex" }}>
+                  <X size={18} />
+                </button>
+              </div>
+              {/* Fields */}
+              <div style={{ padding:"16px 24px", display:"flex", flexDirection:"column", gap:12 }}>
+                {[
+                  ["宛先", "大阪モーター整備 田中 誠様 <tanaka@osaka-motor.co.jp>"],
+                  ["CC", "kojima@currentmotor.co.jp"],
+                  ["件名", `【お見積書】フロントコントロールアーム左 / Q-2041 / ¥${total.toLocaleString()}（税込）`],
+                  ["送信元", "小嶋 鹿乃雲 <kojima@currentmotor.co.jp>"],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div style={{ fontSize:11, color:GRAY_L, width:46, flexShrink:0, textAlign:"right" }}>{lbl}</div>
+                    <input defaultValue={val} style={{ flex:1, padding:"7px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, background:"#FAFAFA" }} />
+                  </div>
+                ))}
+                <div style={{ borderTop:`1px solid ${BORDER}`, paddingTop:12 }}>
+                  <div style={{ fontSize:11, color:GRAY_L, marginBottom:6 }}>本文</div>
+                  <textarea
+                    defaultValue={emailBody}
+                    rows={14}
+                    style={{ width:"100%", padding:"10px 12px", border:`1px solid ${BORDER}`, borderRadius:7, fontSize:12, color:DARK, background:WHITE, lineHeight:1.8, resize:"vertical", fontFamily:"'Noto Sans JP',sans-serif" }}
+                  />
+                </div>
+                {/* Attachment */}
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", background:"#FEF2F2", color:R, border:"1px solid #FECACA", borderRadius:5, fontSize:11, fontWeight:600 }}>
+                    <FileText size={12} /> Q-2041_見積書.pdf
+                  </div>
+                  <div style={{ fontSize:11, color:GRAY_L }}>自動添付（見積書PDF）</div>
+                </div>
+              </div>
+              {/* Footer */}
+              <div style={{ padding:"14px 24px", borderTop:`1px solid ${BORDER}`, background:"#FAFAFA", display:"flex", gap:10, justifyContent:"flex-end" }}>
+                <button onClick={() => setShowEmailModal(false)} style={{ padding:"9px 18px", border:`1px solid ${BORDER}`, borderRadius:8, background:WHITE, color:GRAY, cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>
+                  キャンセル
+                </button>
+                <button
+                  onClick={() => setEmailSent(true)}
+                  style={{ display:"flex", alignItems:"center", gap:7, padding:"9px 22px", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
+                >
+                  <Send size={14} /> 見積書を送信する
+                </button>
+              </div>
+            </>
+          ) : (
+            /* 送信完了 */
+            <div style={{ padding:"48px 40px", display:"flex", flexDirection:"column", alignItems:"center", gap:20, textAlign:"center" }}>
+              <div style={{ width:64, height:64, borderRadius:"50%", background:GREEN_L, border:"2px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <CheckCircle2 size={30} style={{ color:GREEN }} />
+              </div>
+              <div>
+                <div style={{ fontSize:18, fontWeight:700, color:DARK, marginBottom:8 }}>見積書メールを送信しました</div>
+                <div style={{ fontSize:13, color:GRAY, lineHeight:1.8 }}>
+                  <span style={{ fontWeight:600, color:DARK }}>大阪モーター整備</span> へ見積書PDFを添付して送付しました。
+                </div>
+              </div>
+              <div style={{ width:"100%", background:"#FAFAFA", border:`1px solid ${BORDER}`, borderRadius:10, padding:"16px 20px", textAlign:"left" }}>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                  {[
+                    ["見積番号", "Q-2041"],
+                    ["品名", "フロントコントロールアーム左"],
+                    ["見積金額（税抜）", `¥${final.toLocaleString()}`],
+                    ["消費税（10%）", `¥${tax.toLocaleString()}`],
+                    ["合計（税込）", `¥${total.toLocaleString()}`],
+                    ["有効期限", "2026/04/21（2週間）"],
+                  ].map(([lbl, val]) => (
+                    <div key={lbl} style={{ padding:"8px 12px", background:WHITE, borderRadius:7, border:`1px solid ${BORDER}` }}>
+                      <div style={{ fontSize:10, color:GRAY_L, marginBottom:2 }}>{lbl}</div>
+                      <div style={{ fontSize:12, fontWeight:600, color:lbl.includes("合計")?R:DARK, fontFamily:lbl.includes("番号")||lbl.includes("金額")||lbl.includes("税")?undefined:undefined }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ width:"100%", background:BLUE_L, border:"1px solid #BFDBFE", borderRadius:10, padding:"12px 16px", textAlign:"left" }}>
+                <div style={{ fontSize:12, fontWeight:700, color:BLUE, marginBottom:8 }}>次のステップ</div>
+                {["お客様からの受注確定連絡をお待ちください","受注後は「受注・発送」ページで発注手配へ進みます"].map((s,i) => (
+                  <div key={i} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:i===0?6:0 }}>
+                    <span style={{ width:18, height:18, borderRadius:"50%", background:BLUE, color:WHITE, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0 }}>{i+1}</span>
+                    <span style={{ fontSize:12, color:DARK }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => { setShowEmailModal(false); setEmailSent(false); setSent(true); }}
+                style={{ padding:"10px 28px", background:DARK, color:WHITE, border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}
+              >
+                閉じる
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
 /* ═══════════════════════════════════════════════════
-   SCREEN 3: 受注・発送（⑦ 発送ラベル + 支払タグ）
+   SCREEN 3: 受注・発送
    ═══════════════════════════════════════════════════ */
 function OrderScreen() {
   const [mode, setMode] = useState("direct");
@@ -755,14 +1297,17 @@ function OrderScreen() {
   const [cod, setCod] = useState(false);
   const [emailStep, setEmailStep] = useState(0);
   const [invStep, setInvStep] = useState(0);
+  const [aiStep, setAiStep] = useState(0);
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
     const ts = [600,1800,3000].map((d,i) => setTimeout(() => setEmailStep(i+1), d));
     const iv = [2000,3400].map((d,i) => setTimeout(() => setInvStep(i+1), d));
+    // AI自動対応ステップ（順次実行）
+    const ai = [500,1200,2100,3200,4400,5800].map((d,i) => setTimeout(() => setAiStep(i+1), d));
     const ll = ["受注登録開始...","顧客ID: OM-0418 確認","品番 31126855157 在庫確認...","在庫なし → 仕入先発注モード","Ts.CO.Ltd 発注データ生成","受注伝票 #ORD-20260407-2041 生成","基幹システム登録完了 ✓"]
       .map((m,i) => setTimeout(() => setLogs(p=>[...p,m]), 400+i*500));
-    return () => [...ts,...iv,...ll].forEach(clearTimeout);
+    return () => [...ts,...iv,...ai,...ll].forEach(clearTimeout);
   }, []);
 
   const DIRECT = `【直送依頼書】\n宛先: Ts.CO.Ltd ご担当者様\n\n品番: 31126855157\n品名: フロントコントロールアーム左 (OEM)\n数量: 1個 / 金額: ¥7,800\n\nお届け先:\n  大阪モーター整備株式会社\n  〒XXX-XXXX 大阪府大阪市...\n\n・到着後、追跡番号をご連絡ください\n・伝票に「カレント自動車」と記載ください\n\nカレント自動車株式会社 パーツ部`;
@@ -783,21 +1328,18 @@ function OrderScreen() {
 
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      {/* ⑦A 発送手配中 banner */}
       <div style={{ background:GREEN_L, border:`1px solid #BBF7D0`, borderRadius:10, padding:"12px 20px", display:"flex", alignItems:"center", gap:12 }}>
         <CheckCircle2 size={22} style={{ color:GREEN, flexShrink:0 }} />
         <div style={{ flex:1 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:2 }}>
             <div style={{ fontWeight:700, fontSize:14, color:GREEN }}>発送手配中</div>
             <StatusBadge s="受注確定" />
-            {/* ⑦B Payment method tag — auto-set based on customer terms */}
             <span style={{ background:BLUE_L, color:BLUE, border:`1px solid #BFDBFE`, fontSize:11, fontWeight:600, padding:"2px 10px", borderRadius:4 }}>📄 請求書払い（月末締め）</span>
           </div>
           <div style={{ fontSize:12, color:GRAY }}>大阪モーター整備 / C-2041 / 受注番号: ORD-20260407-2041</div>
         </div>
         <div style={{ fontFamily:"JetBrains Mono", fontSize:22, fontWeight:700, color:R }}>¥9,300</div>
       </div>
-
       <div style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr", gap:16 }}>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
@@ -831,15 +1373,39 @@ function OrderScreen() {
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
           <div style={box}>
-            <div style={{ padding:"14px 16px", borderBottom:`1px solid ${BORDER}` }}><div style={{ fontSize:13, fontWeight:600, color:DARK }}>自動メール送信状況</div></div>
-            <div style={{ padding:"0 16px" }}>
-              <ER label="Ts.CO.Ltd への発注確認" needed={1} />
-              <ER label="SBSロジコム への発送指示" needed={2} />
-              <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0" }}>
-                {emailStep>=3 ? <CheckCircle2 size={16} style={{ color:GREEN }} /> : <Loader2 size={16} className="spin" style={{ color:R }} />}
-                <span style={{ fontSize:13, color:emailStep>=3?DARK:GRAY_L }}>大阪モーター整備 への受注通知</span>
-                {emailStep>=3 && <span style={{ marginLeft:"auto", fontSize:11, color:GRAY_L }}>完了</span>}
+            <div style={{ padding:"12px 16px", borderBottom:`1px solid ${BORDER}`, display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ width:22, height:22, borderRadius:6, background:`${R}12`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <span style={{ fontSize:12 }}>🤖</span>
               </div>
+              <div style={{ fontSize:13, fontWeight:700, color:DARK }}>AI自動対応状況</div>
+              <div style={{ marginLeft:"auto", fontSize:10, color:GRAY_L }}>
+                {aiStep >= 6 ? <span style={{ color:GREEN, fontWeight:600 }}>✓ 全処理完了</span> : <span style={{ color:R }}>処理中…</span>}
+              </div>
+            </div>
+            <div style={{ padding:"0 16px" }}>
+              {[
+                { label:"受注内容をAIが解析・確認", detail:"品番・数量・顧客情報の照合完了", step:1, icon:"🔍", color:BLUE },
+                { label:"Ts.CO.Ltd へ発注メール送信", detail:"直送指示 + 発注書PDF添付", step:2, icon:"📧", color:GREEN },
+                { label:"大阪モーター整備 へ受注確認メール", detail:"納期・金額・追跡番号を自動記載", step:3, icon:"📧", color:GREEN },
+                { label:"SBSロジコム へ発送指示メール", detail:"ピッキング指示・梱包方法を送信", step:4, icon:"📦", color:AMBER },
+                { label:"請求書 INV-2041 を自動生成", detail:"¥10,230（税込）月末締め翌月末払い", step:5, icon:"📄", color:PURPLE },
+                { label:"入金管理システムへ自動登録", detail:"督促スケジュールを設定済み", step:6, icon:"💰", color:R },
+              ].map((item, i, arr) => {
+                const done = aiStep >= item.step;
+                const active = aiStep === item.step - 1;
+                return (
+                  <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", borderBottom:i < arr.length-1 ? `1px solid ${BORDER}` : "none" }}>
+                    <div style={{ width:28, height:28, borderRadius:7, background:done?`${item.color}15`:"#F9FAFB", border:`1px solid ${done?item.color:BORDER}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, flexShrink:0, marginTop:1, transition:"all .3s" }}>
+                      {done ? <CheckCircle2 size={14} style={{ color:item.color }} /> : active ? <Loader2 size={14} className="spin" style={{ color:item.color }} /> : <span style={{ fontSize:11 }}>{item.icon}</span>}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:12, fontWeight:500, color:done?DARK:GRAY_L, transition:"color .3s" }}>{item.label}</div>
+                      {done && <div style={{ fontSize:10, color:GRAY_L, marginTop:2 }}>{item.detail}</div>}
+                    </div>
+                    {done && <span style={{ fontSize:10, color:GRAY_L, flexShrink:0, marginTop:3 }}>完了</span>}
+                  </div>
+                );
+              })}
             </div>
           </div>
           <div style={box}>
@@ -867,7 +1433,7 @@ function OrderScreen() {
 }
 
 /* ═══════════════════════════════════════════════════
-   SCREEN 4: 請求書発行・入金管理（⑥ 全面改修）
+   SCREEN 4: 請求書発行・入金管理
    ═══════════════════════════════════════════════════ */
 function PaymentScreen() {
   const [mainTab, setMainTab] = useState("入金管理");
@@ -877,6 +1443,40 @@ function PaymentScreen() {
   const [dunSent, setDunSent] = useState({});
   const [payOv, setPayOv] = useState({});
   const [dunOv, setDunOv] = useState({});
+  const [draftModal, setDraftModal] = useState(null); // 確認・編集モーダル対象ドラフト
+
+  // 各ドラフトの明細データ
+  const draftDetails = {
+    "DRAFT-0430-001": {
+      customer:"大阪モーター整備", contact:"田中 誠", email:"tanaka@osaka-motor.co.jp",
+      period:"2026年4月分", issueDate:"2026/04/30", dueDate:"2026/05/31",
+      terms:"月末締め翌月末払い", staff:"小嶋 鹿乃雲",
+      items:[
+        { date:"04/07", ordNo:"ORD-2041", part:"フロントコントロールアーム左", partNo:"31126855157", qty:1, unit:9300, amount:9300 },
+      ],
+      shipping:{ carrier:"ヤマト運輸", tracking:"1234567890", fee:0, note:"送料無料（¥5,000以上）" },
+    },
+    "DRAFT-0430-002": {
+      customer:"東京欧州車センター", contact:"佐藤 健", email:"sato@tokyo-euro.co.jp",
+      period:"2026年4月分", issueDate:"2026/04/30", dueDate:"2026/05/31",
+      terms:"月末締め翌月末払い", staff:"小嶋 鹿乃雲",
+      items:[
+        { date:"04/07", ordNo:"ORD-2038", part:"タイミングベルトキット", partNo:"06L109257B", qty:1, unit:26000, amount:26000 },
+      ],
+      shipping:{ carrier:"佐川急便", tracking:"9876543210", fee:0, note:"送料無料（¥5,000以上）" },
+    },
+    "DRAFT-0430-003": {
+      customer:"横浜ユーロモータース", contact:"高橋 明", email:"takahashi@yokohama-euro.co.jp",
+      period:"2026年4月分", issueDate:"2026/04/30", dueDate:"2026/05/31",
+      terms:"月末締め翌月末払い", staff:"宮嶋 雅之",
+      items:[
+        { date:"04/01", ordNo:"ORD-2031", part:"DSGオイルポンプ", partNo:"0AM927769D", qty:1, unit:30600, amount:30600 },
+        { date:"04/03", ordNo:"ORD-2029", part:"ブレーキパッド（前後セット）", partNo:"A0004230012", qty:2, unit:9800, amount:19600 },
+        { date:"04/06", ordNo:"ORD-2027", part:"イグニッションコイル", partNo:"98735566700", qty:4, unit:6300, amount:25200 },
+      ],
+      shipping:{ carrier:"ヤマト運輸", tracking:"1122334455", fee:800, note:"小型精密部品 — 別途送料" },
+    },
+  };
 
   const staffInfo = {
     "小嶋": { fullName:"小嶋 鹿乃雲", phone:"045-001-0101" },
@@ -892,7 +1492,6 @@ function PaymentScreen() {
     { no:"INV-2025", customer:"京都輸入車工房",       staff:"宮嶋", amount:33700, confirmed:20000, issued:"03/25", due:"04/20", payStatus:"一部入金あり", dunStatus:"督促中（電話済）" },
   ];
 
-  // Monthly batch drafts
   const monthlyDrafts = [
     { no:"DRAFT-0430-001", customer:"大阪モーター整備",    total:10230, items:1, draftDate:"04/30" },
     { no:"DRAFT-0430-002", customer:"東京欧州車センター",   total:28600, items:1, draftDate:"04/30" },
@@ -901,36 +1500,17 @@ function PaymentScreen() {
 
   const getPay = inv => payOv[inv.no] || inv.payStatus;
   const getDun = inv => dunOv[inv.no] || inv.dunStatus;
-  const getDiff = inv => {
-    if (getPay(inv) === "入金済") return 0;
-    return inv.confirmed - inv.amount;
-  };
-
+  const getDiff = inv => { if (getPay(inv) === "入金済") return 0; return inv.confirmed - inv.amount; };
   const filtered = filter === "全件" ? invoices : invoices.filter(inv => getPay(inv)===filter || getDun(inv)===filter);
-
   const payCounts = {};
   ["未入金","一部入金あり","入金済","過入金あり"].forEach(s => payCounts[s] = invoices.filter(inv=>getPay(inv)===s).length);
-
-  const payColors = {
-    "未入金":{bg:"#FEF2F2",text:R,border:"#FECACA"},
-    "一部入金あり":{bg:AMBER_L,text:AMBER,border:"#FDE68A"},
-    "過入金あり":{bg:PURPLE_L,text:PURPLE,border:"#DDD6FE"},
-    "入金済":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"},
-    "確認前":{bg:"#F9FAFB",text:GRAY,border:BORDER},
-  };
-  const dunColors = {
-    "督促不要":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"},
-    "督促前":{bg:"#F9FAFB",text:GRAY,border:BORDER},
-    "督促中（メールのみ）":{bg:AMBER_L,text:AMBER,border:"#FDE68A"},
-    "督促中（電話済）":{bg:"#FEF2F2",text:R,border:"#FECACA"},
-    "督促完了":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"},
-  };
-
+  const payColors = { "未入金":{bg:"#FEF2F2",text:R,border:"#FECACA"}, "一部入金あり":{bg:AMBER_L,text:AMBER,border:"#FDE68A"}, "過入金あり":{bg:PURPLE_L,text:PURPLE,border:"#DDD6FE"}, "入金済":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"}, "確認前":{bg:"#F9FAFB",text:GRAY,border:BORDER} };
+  const dunColors = { "督促不要":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"}, "督促前":{bg:"#F9FAFB",text:GRAY,border:BORDER}, "督促中（メールのみ）":{bg:AMBER_L,text:AMBER,border:"#FDE68A"}, "督促中（電話済）":{bg:"#FEF2F2",text:R,border:"#FECACA"}, "督促完了":{bg:GREEN_L,text:GREEN,border:"#BBF7D0"} };
   const S = { background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" };
 
   return (
+    <>
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      {/* Header */}
       <div style={{ background:PURPLE_L, border:`1px solid #DDD6FE`, borderRadius:10, padding:"14px 20px", display:"flex", alignItems:"center", gap:14 }}>
         <div style={{ width:36, height:36, borderRadius:8, background:WHITE, border:`1px solid #DDD6FE`, display:"flex", alignItems:"center", justifyContent:"center" }}>
           <Wallet size={16} style={{ color:PURPLE }} />
@@ -938,7 +1518,6 @@ function PaymentScreen() {
         <div style={{ flex:1 }}>
           <div style={{ fontWeight:700, fontSize:13, color:PURPLE }}>経理アカウント — 請求書発行・入金管理</div>
           <div style={{ fontSize:12, color:GRAY, marginTop:1 }}>入金確認・督促 → 経理主担当 ／ 督促エスカレーション → 事業部へ引継ぎ</div>
-          {/* ⑥ Staff contact info */}
           <div style={{ display:"flex", gap:8, marginTop:6 }}>
             {Object.entries(staffInfo).map(([name, info]) => (
               <div key={name} style={{ background:WHITE, border:`1px solid #DDD6FE`, borderRadius:6, padding:"4px 10px", fontSize:11, color:PURPLE, display:"flex", alignItems:"center", gap:6 }}>
@@ -957,17 +1536,11 @@ function PaymentScreen() {
           ))}
         </div>
       </div>
-
-      {/* Main tabs */}
       <div style={{ display:"flex", background:WHITE, borderRadius:"10px 10px 0 0", border:`1px solid ${BORDER}`, overflow:"hidden" }}>
         {["入金管理","月末一括請求書"].map(t => (
-          <button key={t} onClick={() => setMainTab(t)} style={{ padding:"12px 20px", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit", background:"transparent", border:"none", borderBottom:mainTab===t?`2px solid ${R}`:"2px solid transparent", color:mainTab===t?R:GRAY, transition:"all .15s" }}>
-            {t}
-          </button>
+          <button key={t} onClick={() => setMainTab(t)} style={{ padding:"12px 20px", fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit", background:"transparent", border:"none", borderBottom:mainTab===t?`2px solid ${R}`:"2px solid transparent", color:mainTab===t?R:GRAY, transition:"all .15s" }}>{t}</button>
         ))}
       </div>
-
-      {/* Monthly batch invoices */}
       {mainTab === "月末一括請求書" && (
         <div style={{ ...S, overflow:"hidden" }}>
           <div style={{ padding:"12px 18px", borderBottom:`1px solid ${BORDER}`, background:"#FAFAFA", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
@@ -975,35 +1548,29 @@ function PaymentScreen() {
               <div style={{ fontSize:13, fontWeight:600, color:DARK }}>月末一括請求書ドラフト（2026/04/30 自動生成）</div>
               <div style={{ fontSize:11, color:GRAY_L, marginTop:2 }}>システムが自動ドラフト生成済み。ご確認の上、一括送付してください。</div>
             </div>
-            <button style={{ padding:"8px 16px", background:R, color:WHITE, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-              ✈ 一括送付する
-            </button>
+            <button style={{ padding:"8px 16px", background:R, color:WHITE, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>✈ 一括送付する</button>
           </div>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#FAFAFA" }}>{["ドラフト番号","顧客名","請求金額","品目数","請求予定日","ステータス","操作"].map(h=><th key={h} style={{ padding:"9px 16px", textAlign:"left", fontSize:11, color:GRAY_L, fontWeight:600, borderBottom:`1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
-            <tbody>
-              {monthlyDrafts.map((d,i) => (
-                <tr key={d.no} style={{ borderBottom:`1px solid ${BORDER}`, animation:`fadeUp .22s ${i*.05}s ease both`, opacity:0 }}>
-                  <td style={{ padding:"12px 16px", fontFamily:"JetBrains Mono", fontSize:11, color:GRAY_L }}>{d.no}</td>
-                  <td style={{ padding:"12px 16px", fontSize:13, fontWeight:600, color:DARK }}>{d.customer}</td>
-                  <td style={{ padding:"12px 16px", fontFamily:"JetBrains Mono", fontSize:13, color:DARK }}>¥{d.total.toLocaleString()}</td>
-                  <td style={{ padding:"12px 16px", fontSize:12, color:GRAY }}>{d.items}件</td>
-                  <td style={{ padding:"12px 16px", fontSize:12, color:GRAY_L }}>{d.draftDate}</td>
-                  <td style={{ padding:"12px 16px" }}><StatusBadge s="下書き" /></td>
-                  <td style={{ padding:"12px 16px" }}>
-                    <div style={{ display:"flex", gap:6 }}>
-                      <button style={{ fontSize:11, padding:"4px 10px", background:BLUE_L, color:BLUE, border:`1px solid #BFDBFE`, borderRadius:5, cursor:"pointer", fontFamily:"inherit" }}>確認・編集</button>
-                      <button style={{ fontSize:11, padding:"4px 10px", background:GREEN_L, color:GREEN, border:`1px solid #BBF7D0`, borderRadius:5, cursor:"pointer", fontFamily:"inherit" }}>送付する</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+            <tbody>{monthlyDrafts.map((d,i)=>(
+              <tr key={d.no} style={{ borderBottom:`1px solid ${BORDER}`, animation:`fadeUp .22s ${i*.05}s ease both`, opacity:0 }}>
+                <td style={{ padding:"12px 16px", fontFamily:"JetBrains Mono", fontSize:11, color:GRAY_L }}>{d.no}</td>
+                <td style={{ padding:"12px 16px", fontSize:13, fontWeight:600, color:DARK }}>{d.customer}</td>
+                <td style={{ padding:"12px 16px", fontFamily:"JetBrains Mono", fontSize:13, color:DARK }}>¥{d.total.toLocaleString()}</td>
+                <td style={{ padding:"12px 16px", fontSize:12, color:GRAY }}>{d.items}件</td>
+                <td style={{ padding:"12px 16px", fontSize:12, color:GRAY_L }}>{d.draftDate}</td>
+                <td style={{ padding:"12px 16px" }}><StatusBadge s="下書き" /></td>
+                <td style={{ padding:"12px 16px" }}>
+                  <div style={{ display:"flex", gap:6 }}>
+                    <button onClick={() => setDraftModal(d)} style={{ fontSize:11, padding:"4px 10px", background:BLUE_L, color:BLUE, border:`1px solid #BFDBFE`, borderRadius:5, cursor:"pointer", fontFamily:"inherit" }}>確認・編集</button>
+                    <button style={{ fontSize:11, padding:"4px 10px", background:GREEN_L, color:GREEN, border:`1px solid #BBF7D0`, borderRadius:5, cursor:"pointer", fontFamily:"inherit" }}>送付する</button>
+                  </div>
+                </td>
+              </tr>
+            ))}</tbody>
           </table>
         </div>
       )}
-
-      {/* Payment management */}
       {mainTab === "入金管理" && (
         <>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -1013,68 +1580,35 @@ function PaymentScreen() {
           </div>
           <div style={{ ...S, overflow:"auto" }}>
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12, minWidth:900 }}>
-              <thead>
-                <tr style={{ background:"#FAFAFA" }}>
-                  {["請求書番号","顧客名","担当者","請求額","入金確認額","差額","入金ステータス","督促ステータス","操作"].map(h => (
-                    <th key={h} style={{ padding:"9px 12px", textAlign:"left", fontSize:11, color:GRAY_L, fontWeight:600, borderBottom:`1px solid ${BORDER}`, whiteSpace:"nowrap" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv, i) => {
-                  const ps = getPay(inv), ds = getDun(inv), diff = getDiff(inv);
-                  const si = staffInfo[inv.staff];
-                  const pc = payColors[ps] || {};
-                  const dc = dunColors[ds] || {};
-                  return (
-                    <tr key={inv.no} style={{ borderBottom:`1px solid ${BORDER}`, animation:`fadeUp .25s ${i*.04}s ease both`, opacity:0 }}>
-                      <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", fontSize:11, color:R, fontWeight:600, whiteSpace:"nowrap" }}>{inv.no}</td>
-                      <td style={{ padding:"12px 12px", fontWeight:600, color:DARK, whiteSpace:"nowrap" }}>{inv.customer}</td>
-                      <td style={{ padding:"12px 12px" }}>
-                        <div style={{ fontSize:11, color:DARK, whiteSpace:"nowrap" }}>{si?.fullName}</div>
-                        <div style={{ fontSize:10, color:GRAY_L }}>📞 {si?.phone}</div>
-                      </td>
-                      <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", color:DARK, whiteSpace:"nowrap" }}>¥{inv.amount.toLocaleString()}</td>
-                      <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", color:inv.confirmed>0?GREEN:GRAY_L, whiteSpace:"nowrap" }}>
-                        {inv.confirmed > 0 ? `¥${inv.confirmed.toLocaleString()}` : "―"}
-                      </td>
-                      <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", whiteSpace:"nowrap" }}>
-                        {diff===0 ? <span style={{ color:GRAY_L }}>―</span>
-                         : diff<0 ? <span style={{ color:R, fontWeight:700 }}>¥{diff.toLocaleString()}</span>
-                         : <span style={{ color:PURPLE, fontWeight:700 }}>+¥{diff.toLocaleString()}</span>}
-                      </td>
-                      <td style={{ padding:"12px 12px" }}>
-                        <select value={ps} onChange={e=>setPayOv(p=>({...p,[inv.no]:e.target.value}))} style={{ border:`1px solid ${pc.border||BORDER}`, background:pc.bg||"#F9FAFB", color:pc.text||GRAY, borderRadius:4, padding:"3px 6px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
-                          {["確認前","未入金","一部入金あり","過入金あり","入金済"].map(s => <option key={s}>{s}</option>)}
-                        </select>
-                      </td>
-                      <td style={{ padding:"12px 12px" }}>
-                        <select value={ds} onChange={e=>setDunOv(p=>({...p,[inv.no]:e.target.value}))} style={{ border:`1px solid ${dc.border||BORDER}`, background:dc.bg||"#F9FAFB", color:dc.text||GRAY, borderRadius:4, padding:"3px 6px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
-                          {["督促不要","督促前","督促中（メールのみ）","督促中（電話済）","督促完了"].map(s => <option key={s}>{s}</option>)}
-                        </select>
-                      </td>
-                      <td style={{ padding:"12px 12px" }}>
-                        <div style={{ display:"flex", gap:5 }}>
-                          {ps !== "入金済" && ps !== "督促不要" && (
-                            <button onClick={() => {setDunningTarget(inv);setShowDunning(true);}} style={{ fontSize:11, fontWeight:500, padding:"4px 8px", background:dunSent[inv.no]?GREEN_L:AMBER_L, color:dunSent[inv.no]?GREEN:AMBER, border:`1px solid ${dunSent[inv.no]?"#BBF7D0":"#FDE68A"}`, borderRadius:5, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>
-                              {dunSent[inv.no] ? "✓ 送信済" : "📧 督促メール"}
-                            </button>
-                          )}
-                          {ps !== "入金済" && (
-                            <button onClick={() => setPayOv(p=>({...p,[inv.no]:"入金済"}))} style={{ fontSize:11, fontWeight:500, padding:"4px 8px", background:GREEN_L, color:GREEN, border:`1px solid #BBF7D0`, borderRadius:5, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>入金確認</button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
+              <thead><tr style={{ background:"#FAFAFA" }}>{["請求書番号","顧客名","担当者","請求額","入金確認額","差額","入金ステータス","督促ステータス","操作"].map(h=><th key={h} style={{ padding:"9px 12px", textAlign:"left", fontSize:11, color:GRAY_L, fontWeight:600, borderBottom:`1px solid ${BORDER}`, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead>
+              <tbody>{filtered.map((inv, i) => {
+                const ps = getPay(inv), ds = getDun(inv), diff = getDiff(inv);
+                const si = staffInfo[inv.staff];
+                const pc = payColors[ps] || {};
+                const dc = dunColors[ds] || {};
+                return (
+                  <tr key={inv.no} style={{ borderBottom:`1px solid ${BORDER}`, animation:`fadeUp .25s ${i*.04}s ease both`, opacity:0 }}>
+                    <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", fontSize:11, color:R, fontWeight:600, whiteSpace:"nowrap" }}>{inv.no}</td>
+                    <td style={{ padding:"12px 12px", fontWeight:600, color:DARK, whiteSpace:"nowrap" }}>{inv.customer}</td>
+                    <td style={{ padding:"12px 12px" }}><div style={{ fontSize:11, color:DARK, whiteSpace:"nowrap" }}>{si?.fullName}</div><div style={{ fontSize:10, color:GRAY_L }}>📞 {si?.phone}</div></td>
+                    <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", color:DARK, whiteSpace:"nowrap" }}>¥{inv.amount.toLocaleString()}</td>
+                    <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", color:inv.confirmed>0?GREEN:GRAY_L, whiteSpace:"nowrap" }}>{inv.confirmed > 0 ? `¥${inv.confirmed.toLocaleString()}` : "―"}</td>
+                    <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", whiteSpace:"nowrap" }}>{diff===0?<span style={{ color:GRAY_L }}>―</span>:diff<0?<span style={{ color:R, fontWeight:700 }}>¥{diff.toLocaleString()}</span>:<span style={{ color:PURPLE, fontWeight:700 }}>+¥{diff.toLocaleString()}</span>}</td>
+                    <td style={{ padding:"12px 12px" }}><select value={ps} onChange={e=>setPayOv(p=>({...p,[inv.no]:e.target.value}))} style={{ border:`1px solid ${pc.border||BORDER}`, background:pc.bg||"#F9FAFB", color:pc.text||GRAY, borderRadius:4, padding:"3px 6px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>{["確認前","未入金","一部入金あり","過入金あり","入金済"].map(s=><option key={s}>{s}</option>)}</select></td>
+                    <td style={{ padding:"12px 12px" }}><select value={ds} onChange={e=>setDunOv(p=>({...p,[inv.no]:e.target.value}))} style={{ border:`1px solid ${dc.border||BORDER}`, background:dc.bg||"#F9FAFB", color:dc.text||GRAY, borderRadius:4, padding:"3px 6px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>{["督促不要","督促前","督促中（メールのみ）","督促中（電話済）","督促完了"].map(s=><option key={s}>{s}</option>)}</select></td>
+                    <td style={{ padding:"12px 12px" }}>
+                      <div style={{ display:"flex", gap:5 }}>
+                        {ps !== "入金済" && ps !== "督促不要" && <button onClick={() => {setDunningTarget(inv);setShowDunning(true);}} style={{ fontSize:11, fontWeight:500, padding:"4px 8px", background:dunSent[inv.no]?GREEN_L:AMBER_L, color:dunSent[inv.no]?GREEN:AMBER, border:`1px solid ${dunSent[inv.no]?"#BBF7D0":"#FDE68A"}`, borderRadius:5, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>{dunSent[inv.no]?"✓ 送信済":"📧 督促メール"}</button>}
+                        {ps !== "入金済" && <button onClick={() => setPayOv(p=>({...p,[inv.no]:"入金済"}))} style={{ fontSize:11, fontWeight:500, padding:"4px 8px", background:GREEN_L, color:GREEN, border:`1px solid #BBF7D0`, borderRadius:5, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>入金確認</button>}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}</tbody>
             </table>
           </div>
         </>
       )}
-
-      {/* Dunning email popup */}
       {showDunning && dunningTarget && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:50 }} onClick={() => setShowDunning(false)}>
           <div style={{ background:WHITE, borderRadius:12, width:540, maxHeight:"80vh", overflow:"auto", boxShadow:"0 20px 60px rgba(0,0,0,0.2)", padding:24 }} onClick={e=>e.stopPropagation()}>
@@ -1086,20 +1620,10 @@ function PaymentScreen() {
               {dunningTarget.no} / {dunningTarget.customer} / 請求額: ¥{dunningTarget.amount.toLocaleString()} / 期限: {dunningTarget.due}
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-              {[
-                ["宛先",`${dunningTarget.customer} ご担当者様`],
-                ["件名",`【お支払いのご確認】${dunningTarget.no}（¥${dunningTarget.amount.toLocaleString()}）`],
-                ["担当者",`${staffInfo[dunningTarget.staff]?.fullName} (${staffInfo[dunningTarget.staff]?.phone})`],
-              ].map(([lbl,val]) => (
-                <div key={lbl}>
-                  <label style={{ fontSize:11, color:GRAY_L, display:"block", marginBottom:4 }}>{lbl}</label>
-                  <input defaultValue={val} style={{ width:"100%", padding:"7px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK }} />
-                </div>
+              {[["宛先",`${dunningTarget.customer} ご担当者様`],["件名",`【お支払いのご確認】${dunningTarget.no}（¥${dunningTarget.amount.toLocaleString()}）`],["担当者",`${staffInfo[dunningTarget.staff]?.fullName} (${staffInfo[dunningTarget.staff]?.phone})`]].map(([lbl,val]) => (
+                <div key={lbl}><label style={{ fontSize:11, color:GRAY_L, display:"block", marginBottom:4 }}>{lbl}</label><input defaultValue={val} style={{ width:"100%", padding:"7px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK }} /></div>
               ))}
-              <div>
-                <label style={{ fontSize:11, color:GRAY_L, display:"block", marginBottom:4 }}>本文</label>
-                <textarea rows={8} defaultValue={`${dunningTarget.customer} ご担当者様\n\nいつもお世話になっております。カレント自動車株式会社の${staffInfo[dunningTarget.staff]?.fullName}でございます。\n\n下記請求書のお支払いについてご確認をお願いいたします。\n\n請求書番号: ${dunningTarget.no}\n請求金額: ¥${dunningTarget.amount.toLocaleString()}（税込）\nお支払い期限: ${dunningTarget.due}\n\nご多用の折、恐れ入りますが、ご確認のほどよろしくお願いいたします。\n\nカレント自動車株式会社 パーツ部\nTEL: ${staffInfo[dunningTarget.staff]?.phone}`} style={{ width:"100%", padding:"8px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, lineHeight:1.7, resize:"none" }} />
-              </div>
+              <div><label style={{ fontSize:11, color:GRAY_L, display:"block", marginBottom:4 }}>本文</label><textarea rows={8} defaultValue={`${dunningTarget.customer} ご担当者様\n\nいつもお世話になっております。カレント自動車株式会社の${staffInfo[dunningTarget.staff]?.fullName}でございます。\n\n下記請求書のお支払いについてご確認をお願いいたします。\n\n請求書番号: ${dunningTarget.no}\n請求金額: ¥${dunningTarget.amount.toLocaleString()}（税込）\nお支払い期限: ${dunningTarget.due}\n\nご多用の折、恐れ入りますが、ご確認のほどよろしくお願いいたします。\n\nカレント自動車株式会社 パーツ部\nTEL: ${staffInfo[dunningTarget.staff]?.phone}`} style={{ width:"100%", padding:"8px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, lineHeight:1.7, resize:"none" }} /></div>
               <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
                 <button onClick={() => setShowDunning(false)} style={{ padding:"8px 16px", border:`1px solid ${BORDER}`, borderRadius:7, background:WHITE, color:GRAY, cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>キャンセル</button>
                 <button onClick={() => { setDunOv(p=>({...p,[dunningTarget.no]:"督促中（メールのみ）"})); setDunSent(p=>({...p,[dunningTarget.no]:true})); setShowDunning(false); setDunningTarget(null); }} style={{ padding:"8px 18px", background:R, color:WHITE, border:"none", borderRadius:7, cursor:"pointer", fontFamily:"inherit", fontSize:13, fontWeight:700 }}>送信する</button>
@@ -1109,6 +1633,145 @@ function PaymentScreen() {
         </div>
       )}
     </div>
+
+    {/* ── ドラフト確認・編集モーダル ── */}
+    {draftModal && (() => {
+      const det = draftDetails[draftModal.no];
+      if (!det) return null;
+      const subtotal = det.items.reduce((s, r) => s + r.amount, 0);
+      const shipping = det.shipping.fee;
+      const tax      = Math.round((subtotal + shipping) * 0.1);
+      const total    = subtotal + shipping + tax;
+      return (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:60 }}>
+          <div style={{ background:WHITE, borderRadius:14, width:700, maxHeight:"90vh", overflow:"auto", boxShadow:"0 24px 80px rgba(0,0,0,0.25)", display:"flex", flexDirection:"column" }}>
+            {/* Header */}
+            <div style={{ padding:"18px 24px", borderBottom:`1px solid ${BORDER}`, display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ width:38, height:38, borderRadius:9, background:`${PURPLE}12`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <FileText size={17} style={{ color:PURPLE }} />
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:15, fontWeight:700, color:DARK }}>月末一括請求書 — 確認・編集</div>
+                <div style={{ fontSize:11, color:GRAY_L, marginTop:2 }}>
+                  <span style={{ fontWeight:600, color:DARK }}>{det.customer}</span>
+                  　{det.period}　{draftModal.no}
+                </div>
+              </div>
+              <button onClick={() => setDraftModal(null)} style={{ background:"none", border:"none", cursor:"pointer", color:GRAY_L, display:"flex" }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding:"20px 24px", display:"flex", flexDirection:"column", gap:16 }}>
+              {/* 請求先・条件 */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                {[
+                  ["請求先",     `${det.customer}　${det.contact} 様`],
+                  ["メール",     det.email],
+                  ["対象期間",   det.period],
+                  ["請求日",     det.issueDate],
+                  ["支払期限",   det.dueDate],
+                  ["支払条件",   det.terms],
+                  ["担当者",     det.staff],
+                  ["ドラフトNo", draftModal.no],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={{ background:"#FAFAFA", borderRadius:7, padding:"8px 12px", border:`1px solid ${BORDER}` }}>
+                    <div style={{ fontSize:10, color:GRAY_L, marginBottom:2 }}>{lbl}</div>
+                    <div style={{ fontSize:12, fontWeight:500, color:DARK }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 明細テーブル */}
+              <div>
+                <div style={{ fontSize:12, fontWeight:600, color:DARK, marginBottom:8 }}>発注明細</div>
+                <div style={{ border:`1px solid ${BORDER}`, borderRadius:8, overflow:"hidden" }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+                    <thead>
+                      <tr style={{ background:"#F9FAFB" }}>
+                        {["日付","受注番号","品名","品番","数量","単価","金額"].map(h => (
+                          <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:11, color:GRAY_L, fontWeight:600, borderBottom:`1px solid ${BORDER}`, whiteSpace:"nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {det.items.map((row, i) => (
+                        <tr key={i} style={{ borderBottom:i < det.items.length-1 ? `1px solid ${BORDER}` : "none" }}>
+                          <td style={{ padding:"10px 12px", fontSize:11, color:GRAY_L, whiteSpace:"nowrap" }}>{row.date}</td>
+                          <td style={{ padding:"10px 12px", fontFamily:"JetBrains Mono", fontSize:11, color:R, fontWeight:600, whiteSpace:"nowrap" }}>{row.ordNo}</td>
+                          <td style={{ padding:"10px 12px", color:DARK, fontWeight:500 }}>{row.part}</td>
+                          <td style={{ padding:"10px 12px", fontFamily:"JetBrains Mono", fontSize:11, color:GRAY }}>{row.partNo}</td>
+                          <td style={{ padding:"10px 12px", textAlign:"center", color:DARK }}>{row.qty}</td>
+                          <td style={{ padding:"10px 12px", textAlign:"right", fontFamily:"JetBrains Mono", color:DARK }}>¥{row.unit.toLocaleString()}</td>
+                          <td style={{ padding:"10px 12px", textAlign:"right", fontFamily:"JetBrains Mono", fontWeight:700, color:DARK }}>¥{row.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 送料 */}
+              <div style={{ background:shipping > 0 ? AMBER_L : GREEN_L, border:`1px solid ${shipping > 0 ? "#FDE68A" : "#BBF7D0"}`, borderRadius:8, padding:"10px 14px", display:"flex", alignItems:"center", gap:12 }}>
+                <Package size={15} style={{ color: shipping > 0 ? AMBER : GREEN, flexShrink:0 }} />
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color: shipping > 0 ? AMBER : GREEN, marginBottom:2 }}>送料</div>
+                  <div style={{ fontSize:12, color:DARK }}>{det.shipping.carrier}　追跡: <span style={{ fontFamily:"JetBrains Mono", fontSize:11 }}>{det.shipping.tracking}</span></div>
+                  <div style={{ fontSize:11, color:GRAY, marginTop:2 }}>{det.shipping.note}</div>
+                </div>
+                <div style={{ fontFamily:"JetBrains Mono", fontSize:16, fontWeight:700, color: shipping > 0 ? AMBER : GREEN }}>
+                  {shipping > 0 ? `¥${shipping.toLocaleString()}` : "無料"}
+                </div>
+              </div>
+
+              {/* 合計 */}
+              <div style={{ background:"#FAFAFA", border:`1px solid ${BORDER}`, borderRadius:8, padding:"12px 16px" }}>
+                {[
+                  ["小計",           `¥${subtotal.toLocaleString()}`,  false],
+                  ["送料",           shipping > 0 ? `¥${shipping.toLocaleString()}` : "¥0（無料）", false],
+                  ["消費税（10%）",  `¥${tax.toLocaleString()}`,        false],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${BORDER}` }}>
+                    <span style={{ fontSize:12, color:GRAY }}>{lbl}</span>
+                    <span style={{ fontFamily:"JetBrains Mono", fontSize:12, color:DARK }}>{val}</span>
+                  </div>
+                ))}
+                <div style={{ display:"flex", justifyContent:"space-between", paddingTop:10, marginTop:4 }}>
+                  <span style={{ fontWeight:700, fontSize:14, color:DARK }}>合計（税込）</span>
+                  <span style={{ fontFamily:"JetBrains Mono", fontSize:22, fontWeight:700, color:R }}>¥{total.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* 備考 */}
+              <div>
+                <div style={{ fontSize:11, color:GRAY_L, marginBottom:6 }}>備考・特記事項</div>
+                <textarea
+                  defaultValue={`${det.period}分のご請求となります。
+お支払い期限: ${det.dueDate}
+ご不明な点はご連絡ください。`}
+                  rows={3}
+                  style={{ width:"100%", padding:"8px 10px", border:`1px solid ${BORDER}`, borderRadius:6, fontSize:12, color:DARK, lineHeight:1.7, resize:"none", fontFamily:"'Noto Sans JP',sans-serif" }}
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding:"14px 24px", borderTop:`1px solid ${BORDER}`, background:"#FAFAFA", display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <button onClick={() => setDraftModal(null)} style={{ padding:"9px 18px", border:`1px solid ${BORDER}`, borderRadius:8, background:WHITE, color:GRAY, cursor:"pointer", fontFamily:"inherit", fontSize:13 }}>
+                閉じる
+              </button>
+              <button style={{ display:"flex", alignItems:"center", gap:7, padding:"9px 22px", background:PURPLE, color:WHITE, border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+                <Download size={14} /> PDF出力
+              </button>
+              <button style={{ display:"flex", alignItems:"center", gap:7, padding:"9px 22px", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+                <Send size={14} /> この請求書を送付する
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
+    </>
   );
 }
 
@@ -1179,12 +1842,10 @@ function StaffMaster() {
 }
 
 /* ═══════════════════════════════════════════════════
-   SCREEN 9: 売上ダッシュボード（② ⑤ 予測・担当者・粗利金額）
+   SCREEN 9: 売上ダッシュボード
    ═══════════════════════════════════════════════════ */
 function SalesDashboard() {
   const [period, setPeriod] = useState("月次");
-
-  // ② April has forecast showing growth beyond March
   const monthly = [
     { m:"10月", 売上:4820000, 粗利:1350000, 件数:38, forecast:null },
     { m:"11月", 売上:5140000, 粗利:1480000, 件数:42, forecast:null },
@@ -1192,24 +1853,20 @@ function SalesDashboard() {
     { m:"1月",  売上:4380000, 粗利:1190000, 件数:35, forecast:null },
     { m:"2月",  売上:5670000, 粗利:1640000, 件数:44, forecast:null },
     { m:"3月",  売上:7280000, 粗利:2140000, 件数:58, forecast:null },
-    { m:"4月",  売上:3140000, 粗利:920000,  件数:27, forecast:8800000 }, // forecast > March = growth
+    { m:"4月",  売上:3140000, 粗利:920000,  件数:27, forecast:8800000 },
   ];
-
   const kpis = [
     { label:"今月売上（速報）", value:"¥3,140,000", sub:"予測: ¥8,800,000（前月超え）", up:true, color:R, bg:"#FEF2F2", border:"#FECACA" },
     { label:"今月粗利",         value:"¥920,000",   sub:"粗利率 29.3%",  up:true, color:GREEN, bg:GREEN_L, border:"#BBF7D0" },
     { label:"今月受注件数",     value:"27件",        sub:"前月比 速報値", up:true, color:BLUE, bg:BLUE_L, border:"#BFDBFE" },
     { label:"月次平均粗利率",   value:"29.1%",       sub:"6ヶ月平均",     up:true, color:PURPLE, bg:PURPLE_L, border:"#DDD6FE" },
   ];
-
-  // ⑤ Staff + 粗利金額 added
   const recentOrders = [
     { id:"ORD-2041", customer:"大阪モーター整備",     part:"フロントコントロールアーム左", amount:9300,  margin:19.4, grossAmt:1804, date:"04/07", status:"発送済",   staff:"小嶋" },
     { id:"ORD-2040", customer:"神戸カーサービス",      part:"ブレーキパッド（低ダスト）",   amount:14800, margin:22.1, grossAmt:3271, date:"04/07", status:"発送済",   staff:"宮嶋" },
     { id:"ORD-2038", customer:"東京欧州車センター",    part:"タイミングベルトキット",       amount:28600, margin:31.5, grossAmt:9009, date:"04/07", status:"受注確定", staff:"小嶋" },
     { id:"ORD-2037", customer:"横浜ユーロモータース",  part:"DSGオイルポンプ",              amount:33700, margin:27.8, grossAmt:9369, date:"04/07", status:"受注確定", staff:"宮嶋" },
   ];
-
   const topCustomers = [
     { name:"横浜ユーロモータース", sales:1840000, orders:9, share:28.4 },
     { name:"大阪モーター整備",     sales:1210000, orders:7, share:18.7 },
@@ -1217,7 +1874,6 @@ function SalesDashboard() {
     { name:"名古屋プレミアムAuto", sales:720000,  orders:4, share:11.1 },
     { name:"神戸カーサービス",     sales:590000,  orders:3, share:9.1 },
   ];
-
   const topParts = [
     { cat:"サスペンション", sales:1280000, pct:40.7, color:BLUE },
     { cat:"ブレーキ",       sales:780000,  pct:24.8, color:R },
@@ -1225,12 +1881,9 @@ function SalesDashboard() {
     { cat:"ミッション",     sales:320000,  pct:10.2, color:PURPLE },
     { cat:"その他",         sales:220000,  pct:7.1,  color:GRAY },
   ];
-
-  // ② Chart with forecast stacked bar
-  const chartMaxVal = Math.max(...monthly.map(d => d.forecast || d.売上)); // 8,800,000
+  const chartMaxVal = Math.max(...monthly.map(d => d.forecast || d.売上));
   const chartH = 160, barW = 42, gap = 14;
   const totalW = monthly.length * (barW + gap) - gap;
-
   const grossMin = Math.min(...monthly.map(d => d.粗利));
   const grossMax = Math.max(...monthly.map(d => d.粗利));
   const pts = monthly.map((d, i) => {
@@ -1238,9 +1891,7 @@ function SalesDashboard() {
     const y = chartH - ((d.粗利 - grossMin) / (grossMax - grossMin || 1)) * (chartH - 20) - 8;
     return `${x},${y}`;
   });
-
   const S = { background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" };
-
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
@@ -1251,7 +1902,6 @@ function SalesDashboard() {
           ))}
         </div>
       </div>
-
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
         {kpis.map(k => (
           <div key={k.label} style={{ ...S, padding:"16px 18px" }}>
@@ -1264,7 +1914,6 @@ function SalesDashboard() {
           </div>
         ))}
       </div>
-
       <div style={{ display:"grid", gridTemplateColumns:"1.6fr 1fr", gap:14 }}>
         <div style={{ ...S, padding:20 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
@@ -1280,10 +1929,7 @@ function SalesDashboard() {
               {[0,1,2,3].map(ii => {
                 const y = chartH - (chartH / 3) * ii;
                 const val = Math.round((chartMaxVal / 3) * ii / 100000) * 100000;
-                return <g key={ii}>
-                  <line x1={30} y1={y} x2={totalW+40} y2={y} stroke={BORDER} strokeWidth={0.5} strokeDasharray="4,4" />
-                  <text x={28} y={y-3} fontSize={9} fill={GRAY_L} textAnchor="end">¥{(val/10000).toFixed(0)}万</text>
-                </g>;
+                return <g key={ii}><line x1={30} y1={y} x2={totalW+40} y2={y} stroke={BORDER} strokeWidth={0.5} strokeDasharray="4,4" /><text x={28} y={y-3} fontSize={9} fill={GRAY_L} textAnchor="end">¥{(val/10000).toFixed(0)}万</text></g>;
               })}
               <g transform="translate(30,0)">
                 {monthly.map((d, i) => {
@@ -1293,40 +1939,23 @@ function SalesDashboard() {
                   const isLast = i === monthly.length - 1;
                   return (
                     <g key={d.m}>
-                      {/* Actual bar */}
                       <rect x={x} y={chartH - bh} width={barW} height={bh} fill={isLast ? `${R}85` : R} rx={3} />
-                      {/* ② Forecast stacked bar for April */}
-                      {isLast && fh > 0 && (
-                        <rect x={x} y={chartH - bh - fh} width={barW} height={fh} fill={`${R}25`} rx={3} stroke={R} strokeWidth={1.5} strokeDasharray="4,3" />
-                      )}
+                      {isLast && fh > 0 && <rect x={x} y={chartH - bh - fh} width={barW} height={fh} fill={`${R}25`} rx={3} stroke={R} strokeWidth={1.5} strokeDasharray="4,3" />}
                       <text x={x + barW/2} y={chartH + 14} textAnchor="middle" fontSize={10} fill={isLast ? R : GRAY}>{d.m}</text>
-                      {isLast ? (
-                        <g>
-                          <text x={x + barW/2} y={chartH - bh - fh - 6} textAnchor="middle" fontSize={9} fill={R}>予測¥{(d.forecast/10000).toFixed(0)}万</text>
-                        </g>
-                      ) : (
-                        <text x={x + barW/2} y={chartH - bh - 5} textAnchor="middle" fontSize={9} fill={GRAY_L}>¥{(d.売上/10000).toFixed(0)}万</text>
-                      )}
+                      {isLast ? <text x={x + barW/2} y={chartH - bh - fh - 6} textAnchor="middle" fontSize={9} fill={R}>予測¥{(d.forecast/10000).toFixed(0)}万</text>
+                               : <text x={x + barW/2} y={chartH - bh - 5} textAnchor="middle" fontSize={9} fill={GRAY_L}>¥{(d.売上/10000).toFixed(0)}万</text>}
                     </g>
                   );
                 })}
-                {/* Gross profit line */}
                 <polyline points={pts.join(" ")} fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                 {monthly.map((d, i) => {
                   const [x, y] = pts[i].split(",").map(Number);
-                  return (
-                    <g key={i}>
-                      <circle cx={x} cy={y} r={3} fill={GREEN} />
-                      {/* ⑤ Gross profit amount labels */}
-                      <text x={x} y={y - 8} textAnchor="middle" fontSize={8} fill={GREEN}>¥{(d.粗利/10000).toFixed(0)}万</text>
-                    </g>
-                  );
+                  return (<g key={i}><circle cx={x} cy={y} r={3} fill={GREEN} /><text x={x} y={y - 8} textAnchor="middle" fontSize={8} fill={GREEN}>¥{(d.粗利/10000).toFixed(0)}万</text></g>);
                 })}
               </g>
             </svg>
           </div>
         </div>
-
         <div style={{ ...S, padding:20 }}>
           <div style={{ fontSize:13, fontWeight:600, color:DARK, marginBottom:14 }}>カテゴリ別売上構成</div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
@@ -1354,26 +1983,17 @@ function SalesDashboard() {
           </div>
         </div>
       </div>
-
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
         <div style={{ ...S, padding:20 }}>
           <div style={{ fontSize:13, fontWeight:600, color:DARK, marginBottom:14 }}>顧客別売上ランキング（今月）</div>
           {topCustomers.map((c, i) => (
             <div key={c.name} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:i<topCustomers.length-1?`1px solid ${BORDER}`:"none" }}>
               <div style={{ width:22, height:22, borderRadius:"50%", background:i===0?AMBER_L:"#F9FAFB", color:i===0?AMBER:GRAY_L, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, flexShrink:0, border:`1px solid ${i===0?"#FDE68A":BORDER}` }}>{i+1}</div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:12, fontWeight:500, color:DARK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name}</div>
-                <div style={{ fontSize:10, color:GRAY_L }}>{c.orders}件</div>
-              </div>
-              <div style={{ textAlign:"right", flexShrink:0 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:DARK, fontFamily:"JetBrains Mono" }}>¥{(c.sales/10000).toFixed(0)}万</div>
-                <div style={{ fontSize:10, color:GRAY_L }}>{c.share}%</div>
-              </div>
+              <div style={{ flex:1, minWidth:0 }}><div style={{ fontSize:12, fontWeight:500, color:DARK, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name}</div><div style={{ fontSize:10, color:GRAY_L }}>{c.orders}件</div></div>
+              <div style={{ textAlign:"right", flexShrink:0 }}><div style={{ fontSize:13, fontWeight:700, color:DARK, fontFamily:"JetBrains Mono" }}>¥{(c.sales/10000).toFixed(0)}万</div><div style={{ fontSize:10, color:GRAY_L }}>{c.share}%</div></div>
             </div>
           ))}
         </div>
-
-        {/* ⑤ Recent orders with staff + 粗利金額 */}
         <div style={{ ...S, padding:20 }}>
           <div style={{ fontSize:13, fontWeight:600, color:DARK, marginBottom:14 }}>直近の成約案件</div>
           {recentOrders.map((o, i) => (
@@ -1383,7 +2003,6 @@ function SalesDashboard() {
                   <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:2 }}>
                     <span style={{ fontSize:11, fontFamily:"JetBrains Mono", color:R, fontWeight:600 }}>{o.id}</span>
                     <StatusBadge s={o.status} />
-                    {/* ⑤ Staff name */}
                     <span style={{ fontSize:10, background:"#F3F4F6", color:GRAY, borderRadius:3, padding:"1px 6px" }}>{o.staff}</span>
                   </div>
                   <div style={{ fontSize:12, fontWeight:500, color:DARK, marginBottom:1 }}>{o.customer}</div>
@@ -1391,7 +2010,6 @@ function SalesDashboard() {
                 </div>
                 <div style={{ textAlign:"right", flexShrink:0, marginLeft:12 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:DARK, fontFamily:"JetBrains Mono" }}>¥{o.amount.toLocaleString()}</div>
-                  {/* ⑤ Gross profit amount + rate */}
                   <div style={{ fontSize:10, color:o.margin>25?GREEN:GRAY_L }}>粗利 ¥{o.grossAmt.toLocaleString()} ({o.margin}%)</div>
                   <div style={{ fontSize:10, color:GRAY_L }}>{o.date}</div>
                 </div>
@@ -1404,7 +2022,6 @@ function SalesDashboard() {
   );
 }
 
-/* ─── SCREEN 10: 在庫・引当管理 ─── */
 function InventoryScreen() {
   const [tab, setTab] = useState("在庫一覧");
   const [filter, setFilter] = useState("全件");
@@ -1456,7 +2073,6 @@ function InventoryScreen() {
   );
 }
 
-/* ─── SCREEN 11: 赤伝・返品管理 ─── */
 function CreditMemoScreen() {
   const [showNew, setShowNew] = useState(false);
   const memos = [
@@ -1467,20 +2083,9 @@ function CreditMemoScreen() {
   const S = { background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" };
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <div style={{ background:BLUE_L, border:`1px solid #BFDBFE`, borderRadius:10, padding:"12px 18px", display:"flex", alignItems:"center", gap:12 }}>
-        <div style={{ width:34, height:34, borderRadius:8, background:WHITE, border:`1px solid #BFDBFE`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <FileText size={15} style={{ color:BLUE }} />
-        </div>
-        <div>
-          <div style={{ fontSize:13, fontWeight:700, color:BLUE }}>電子帳簿保存法 / インボイス制度 対応</div>
-          <div style={{ fontSize:12, color:GRAY }}>赤伝は元伝票を「削除せず」マイナス伝票を新規発行。登録番号: T9-1234-5678-9012</div>
-        </div>
-      </div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <div style={{ fontSize:13, color:GRAY }}>赤伝は元の請求書を修正・削除せず、マイナス伝票として新規発行します。</div>
-        <button onClick={() => setShowNew(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", background:R, color:WHITE, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-          <Plus size={14} /> 赤伝を起票する
-        </button>
+        <button onClick={() => setShowNew(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", background:R, color:WHITE, border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}><Plus size={14} /> 赤伝を起票する</button>
       </div>
       <div style={{ ...S, overflow:"hidden" }}>
         <table style={{ width:"100%", borderCollapse:"collapse" }}>
@@ -1504,7 +2109,6 @@ function CreditMemoScreen() {
   );
 }
 
-/* ─── SCREEN 12: VIN・互換品番（④ VINヒント削除）─── */
 function VinLedgerScreen() {
   const [tab, setTab] = useState("VINカルテ");
   const [selected, setSelected] = useState("WBA5R110X0FH12345");
@@ -1558,7 +2162,6 @@ function VinLedgerScreen() {
                     </div>
                   ))}
                 </div>
-                {/* ④ VIN tip box removed */}
               </div>
             )}
           </div>
@@ -1568,14 +2171,8 @@ function VinLedgerScreen() {
             {compat.map((c, i) => (
               <div key={c.oem} style={{ borderBottom:`1px solid ${BORDER}`, padding:16, animation:`fadeUp .22s ${i*.08}s ease both`, opacity:0 }}>
                 <div style={{ display:"flex", alignItems:"flex-start", gap:14, marginBottom:12 }}>
-                  <div>
-                    <div style={{ fontFamily:"JetBrains Mono", fontSize:13, color:R, fontWeight:700 }}>{c.oem}</div>
-                    <div style={{ fontSize:11, color:GRAY_L }}>{c.maker} / 純正品番</div>
-                  </div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:13, fontWeight:600, color:DARK }}>{c.name}</div>
-                    <div style={{ fontSize:11, color:GRAY_L }}>適合: {c.applies}</div>
-                  </div>
+                  <div><div style={{ fontFamily:"JetBrains Mono", fontSize:13, color:R, fontWeight:700 }}>{c.oem}</div><div style={{ fontSize:11, color:GRAY_L }}>{c.maker} / 純正品番</div></div>
+                  <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:600, color:DARK }}>{c.name}</div><div style={{ fontSize:11, color:GRAY_L }}>適合: {c.applies}</div></div>
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:`repeat(${c.aftermarket.length},1fr)`, gap:10 }}>
                   {c.aftermarket.map(a => (
@@ -1605,7 +2202,7 @@ const OPS_NAV = [
   {id:1,Icon:ShoppingCart,label:"仕入先比較",sub:"仕入比較"},
   {id:2,Icon:FileText,label:"見積作成",sub:"見積書"},
   {id:3,Icon:Package,label:"受注・発送",sub:"受注管理"},
-  {id:4,Icon:Wallet,label:"入金管理",sub:"入金確認"},
+  {id:4,Icon:Wallet,label:"請求・入金管理",sub:"入金確認"},
 ];
 const MASTER_NAV = [
   {id:5,Icon:Users,label:"顧客マスタ",sub:"顧客管理"},
@@ -1623,10 +2220,7 @@ function Sidebar({ open, setOpen, screen, setScreen }) {
     <aside className="sidebar" style={{ width:open?220:64, background:WHITE, borderRight:`1px solid ${BORDER}`, display:"flex", flexDirection:"column", position:"sticky", top:0, height:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, padding:"0 16px", height:64, borderBottom:`1px solid ${BORDER}`, flexShrink:0 }}>
         <div style={{ width:32, height:32, borderRadius:8, background:R, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:700, color:WHITE, flexShrink:0 }}>C</div>
-        {open && <div style={{ overflow:"hidden" }}>
-          <div style={{ fontSize:13, fontWeight:700, color:DARK, whiteSpace:"nowrap" }}>カレント自動車</div>
-          <div style={{ fontSize:10, color:GRAY_L, whiteSpace:"nowrap" }}>部品販売管理システム</div>
-        </div>}
+        {open && <div style={{ overflow:"hidden" }}><div style={{ fontSize:13, fontWeight:700, color:DARK, whiteSpace:"nowrap" }}>カレント自動車</div><div style={{ fontSize:10, color:GRAY_L, whiteSpace:"nowrap" }}>部品販売管理システム</div></div>}
       </div>
       <nav style={{ flex:1, padding:"10px 8px", display:"flex", flexDirection:"column", gap:2, overflowY:"auto" }}>
         {open && <div style={{ fontSize:10, fontWeight:700, color:GRAY_L, letterSpacing:"0.08em", padding:"6px 10px 4px" }}>業務</div>}
@@ -1668,15 +2262,16 @@ function TopBar({ isLoggedIn, setIsLoggedIn, screen }) {
         <div style={{ fontSize:11, color:GRAY_L }}>{ALL_NAV_MAP[screen]?.sub} — カレント自動車株式会社</div>
       </div>
       <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:12 }}>
+        <button style={{ position:"relative", background:"none", border:"none", cursor:"pointer", color:GRAY, display:"flex", alignItems:"center", padding:6, borderRadius:7 }}>
+          <Bell size={17} />
+          <span style={{ position:"absolute", top:4, right:4, width:8, height:8, background:R, borderRadius:"50%", border:`2px solid ${WHITE}` }} />
+        </button>
         <div style={{ width:1, height:24, background:BORDER }} />
         {isLoggedIn ? (
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <div style={{ width:30, height:30, borderRadius:"50%", background:`${R}15`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:R }}>小</div>
-              <div>
-                <div style={{ fontSize:13, fontWeight:600, color:DARK, lineHeight:1 }}>小嶋 鹿乃雲</div>
-                <div style={{ fontSize:10, color:GRAY_L, marginTop:2 }}>パーツ事業部</div>
-              </div>
+              <div><div style={{ fontSize:13, fontWeight:600, color:DARK, lineHeight:1 }}>小嶋 鹿乃雲</div><div style={{ fontSize:10, color:GRAY_L, marginTop:2 }}>パーツ事業部</div></div>
             </div>
             <button onClick={() => setIsLoggedIn(false)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", border:`1px solid ${BORDER}`, borderRadius:7, background:WHITE, fontSize:12, fontWeight:500, color:GRAY, cursor:"pointer", fontFamily:"inherit" }}>
               <LogOut size={13} /> ログアウト
@@ -1708,17 +2303,35 @@ function CaseStrip({ screen }) {
   );
 }
 
-const SCREENS = {
-  0:DashboardScreen, 1:SupplierScreen, 2:QuoteScreen, 3:OrderScreen, 4:PaymentScreen,
-  5:CustomerMaster, 6:SupplierMasterScreen, 7:PartsMaster, 8:StaffMaster,
-  9:SalesDashboard, 10:InventoryScreen, 11:CreditMemoScreen, 12:VinLedgerScreen
-};
-
+/* ─── APP ROOT ─── */
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [screen, setScreen] = useState(0);
-  const Screen = SCREENS[screen] || DashboardScreen;
+  const [inquiryActive, setInquiryActive] = useState(null); // null or { caseId, part, part_no, car, customer }
+
+  function clearInquiry() { setInquiryActive(null); }
+
+  // Render screen with appropriate props
+  function renderScreen() {
+    switch(screen) {
+      case 0: return <DashboardScreen key={screen} setScreen={setScreen} setInquiryActive={setInquiryActive} />;
+      case 1: return <SupplierScreen key={`${screen}-${inquiryActive?.caseId}`} inquiryActive={inquiryActive} clearInquiry={clearInquiry} />;
+      case 2: return <QuoteScreen key={screen} />;
+      case 3: return <OrderScreen key={screen} />;
+      case 4: return <PaymentScreen key={screen} />;
+      case 5: return <CustomerMaster key={screen} />;
+      case 6: return <SupplierMasterScreen key={screen} />;
+      case 7: return <PartsMaster key={screen} />;
+      case 8: return <StaffMaster key={screen} />;
+      case 9: return <SalesDashboard key={screen} />;
+      case 10: return <InventoryScreen key={screen} />;
+      case 11: return <CreditMemoScreen key={screen} />;
+      case 12: return <VinLedgerScreen key={screen} />;
+      default: return <DashboardScreen key={screen} setScreen={setScreen} setInquiryActive={setInquiryActive} />;
+    }
+  }
+
   return (
     <>
       <style>{THEME}</style>
@@ -1728,7 +2341,7 @@ export default function App() {
           <TopBar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} screen={screen} />
           <main style={{ flex:1, padding:24, overflowY:"auto" }}>
             <CaseStrip screen={screen} />
-            <Screen key={screen} />
+            {renderScreen()}
           </main>
         </div>
       </div>
