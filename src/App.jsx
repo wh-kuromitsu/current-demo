@@ -1302,7 +1302,7 @@ function SalesDashboard() {
                       <text x={x + barW/2} y={chartH + 14} textAnchor="middle" fontSize={10} fill={isLast ? R : GRAY}>{d.m}</text>
                       {isLast ? (
                         <g>
-                          <text x={x + barW/2} y={chartH - bh - fh - 6} textAnchor="middle" fontSize={9} fill={R}>予測¥{(d.forecast!/10000).toFixed(0)}万</text>
+                          <text x={x + barW/2} y={chartH - bh - fh - 6} textAnchor="middle" fontSize={9} fill={R}>予測¥{(d.forecast/10000).toFixed(0)}万</text>
                         </g>
                       ) : (
                         <text x={x + barW/2} y={chartH - bh - 5} textAnchor="middle" fontSize={9} fill={GRAY_L}>¥{(d.売上/10000).toFixed(0)}万</text>
