@@ -1118,8 +1118,8 @@ MAIL: kojima@currentmotor.co.jp`;
         <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:24, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>
           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
             <div>
-              <div style={{ fontWeight:700, fontSize:15, color:"#1a1a2e" }}>カレント自動車株式会社</div>
-              <div style={{ fontSize:11, color:"#666", marginTop:2 }}>〒222-0033 神奈川県横浜市港北区</div>
+              <div style={{ fontWeight:700, fontSize:15, color:"#1a1a2e" }}>WORK HERO株式会社</div>
+              <div style={{ fontSize:11, color:"#666", marginTop:2 }}>〒107-0052 東京都港区赤坂4丁目11-21</div>
               <div style={{ fontSize:11, color:"#666" }}>TEL: 045-XXX-XXXX</div>
             </div>
             <div style={{ textAlign:"right" }}>
@@ -1132,18 +1132,46 @@ MAIL: kojima@currentmotor.co.jp`;
             <thead><tr style={{ background:"#1a1a2e", color:WHITE }}>{["品名","品番","数量","単価","金額"].map(h=><th key={h} style={{ padding:"5px 8px", textAlign:"left", fontWeight:500 }}>{h}</th>)}</tr></thead>
             <tbody>
               <tr style={{ borderBottom:"1px solid #eee" }}>
-                <td style={{ padding:"8px" }}>フロントコントロールアーム左<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
+                <td style={{ padding:"8px" }}>テンションストラット（プルストラット）左<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
                 <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>31126855157</td>
                 <td style={{ padding:"8px", textAlign:"center" }}>1</td>
-                <td style={{ padding:"8px", textAlign:"right" }}>¥{final.toLocaleString()}</td>
-                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{final.toLocaleString()}</td>
+                <td style={{ padding:"8px", textAlign:"right" }}>¥{"12,800"}</td>
+                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"12,800"}</td>
+              </tr>
+              <tr style={{ borderBottom:"1px solid #eee" }}>
+                <td style={{ padding:"8px" }}>イグニッションコイル（High Power）<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
+                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>12138643360</td>
+                <td style={{ padding:"8px", textAlign:"center" }}>4</td>
+                <td style={{ padding:"8px", textAlign:"right" }}>¥{"6,800"}</td>
+                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"27,200"}</td>
+              </tr>
+              <tr style={{ borderBottom:"1px solid #eee" }}>
+                <td style={{ padding:"8px" }}>湿式エアクリーナーエレメント<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
+                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>13718691835</td>
+                <td style={{ padding:"8px", textAlign:"center" }}>1</td>
+                <td style={{ padding:"8px", textAlign:"right" }}>¥{"5,200"}</td>
+                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"5,200"}</td>
+              </tr>
+              <tr style={{ borderBottom:"1px solid #eee" }}>
+                <td style={{ padding:"8px" }}>フロント ブレーキパッド センサー<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
+                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>34356870349</td>
+                <td style={{ padding:"8px", textAlign:"center" }}>1</td>
+                <td style={{ padding:"8px", textAlign:"right" }}>¥{"3,900"}</td>
+                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"3,900"}</td>
+              </tr>
+              <tr style={{ borderBottom:"1px solid #eee" }}>
+                <td style={{ padding:"8px" }}>送料</td>
+                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}></td>
+                <td style={{ padding:"8px", textAlign:"center" }}></td>
+                <td style={{ padding:"8px", textAlign:"right" }}></td>
+                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{550}</td>
               </tr>
             </tbody>
           </table>
           <div style={{ display:"flex", justifyContent:"flex-end", gap:16, marginTop:10, fontSize:11, color:"#555" }}>
-            <span>小計: ¥{final.toLocaleString()}</span>
-            <span>消費税(10%): ¥{Math.round(final*.1).toLocaleString()}</span>
-            <span style={{ fontWeight:700, color:"#1a1a2e" }}>合計: ¥{Math.round(final*1.1).toLocaleString()}</span>
+            <span>小計: ¥{"49,650"}</span>
+            <span>消費税(10%): ¥{"4,965"}</span>
+            <span style={{ fontWeight:700, color:"#1a1a2e" }}>合計: ¥{"54,615"}</span>
           </div>
           <div style={{ marginTop:10, fontSize:10, color:"#999", borderTop:"1px solid #eee", paddingTop:8 }}>※ 納期: 2営業日 / お支払: 月末締め翌月末払い</div>
         </div>
@@ -1847,13 +1875,13 @@ function StaffMaster() {
 function SalesDashboard() {
   const [period, setPeriod] = useState("月次");
   const monthly = [
-    { m:"10月", 売上:4820000, 粗利:1350000, 件数:38, forecast:null },
-    { m:"11月", 売上:5140000, 粗利:1480000, 件数:42, forecast:null },
-    { m:"12月", 売上:6210000, 粗利:1820000, 件数:51, forecast:null },
-    { m:"1月",  売上:4380000, 粗利:1190000, 件数:35, forecast:null },
-    { m:"2月",  売上:5670000, 粗利:1640000, 件数:44, forecast:null },
-    { m:"3月",  売上:7280000, 粗利:2140000, 件数:58, forecast:null },
-    { m:"4月",  売上:3140000, 粗利:920000,  件数:27, forecast:8800000 },
+    { m:"10月", 売上:4820000, 粗利:1350000, 粗利率:22.5, 件数:38, forecast:null },
+    { m:"11月", 売上:5140000, 粗利:1480000, 粗利率:24.8, 件数:42, forecast:null },
+    { m:"12月", 売上:6210000, 粗利:1820000, 粗利率:27.3, 件数:51, forecast:null },
+    { m:"1月",  売上:4380000, 粗利:1190000, 粗利率:20.8, 件数:35, forecast:null },
+    { m:"2月",  売上:5670000, 粗利:1640000, 粗利率:26.1, 件数:44, forecast:null },
+    { m:"3月",  売上:7280000, 粗利:2140000, 粗利率:28.9, 件数:58, forecast:null },
+    { m:"4月",  売上:3140000, 粗利:920000,  粗利率:29.3, 件数:27, forecast:8800000 },
   ];
   const kpis = [
     { label:"今月売上（速報）", value:"¥3,140,000", sub:"予測: ¥8,800,000（前月超え）", up:true, color:R, bg:"#FEF2F2", border:"#FECACA" },
@@ -1884,11 +1912,11 @@ function SalesDashboard() {
   const chartMaxVal = Math.max(...monthly.map(d => d.forecast || d.売上));
   const chartH = 160, barW = 42, gap = 14;
   const totalW = monthly.length * (barW + gap) - gap;
-  const grossMin = Math.min(...monthly.map(d => d.粗利));
-  const grossMax = Math.max(...monthly.map(d => d.粗利));
+  const grossMin = Math.min(...monthly.map(d => d.粗利率));
+  const grossMax = Math.max(...monthly.map(d => d.粗利率));
   const pts = monthly.map((d, i) => {
     const x = i * (barW + gap) + barW / 2;
-    const y = chartH - ((d.粗利 - grossMin) / (grossMax - grossMin || 1)) * (chartH - 20) - 8;
+    const y = chartH - ((d.粗利率 - grossMin) / (grossMax - grossMin || 1)) * (chartH - 45) - 8;
     return `${x},${y}`;
   });
   const S = { background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" };
@@ -1917,11 +1945,11 @@ function SalesDashboard() {
       <div style={{ display:"grid", gridTemplateColumns:"1.6fr 1fr", gap:14 }}>
         <div style={{ ...S, padding:20 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-            <div style={{ fontSize:13, fontWeight:600, color:DARK }}>月次売上 / 粗利推移（4月は予測含む）</div>
+            <div style={{ fontSize:13, fontWeight:600, color:DARK }}>月次売上 / 粗利推移</div>
             <div style={{ display:"flex", gap:10, fontSize:11, color:GRAY_L }}>
               <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:R, display:"inline-block" }}></span>売上</span>
               <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:`${R}35`, border:`1px dashed ${R}`, display:"inline-block" }}></span>予測</span>
-              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:2, background:GREEN, display:"inline-block" }}></span>粗利</span>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:2, background:GREEN, display:"inline-block" }}></span>粗利率</span>
             </div>
           </div>
           <div style={{ overflowX:"auto" }}>
@@ -1933,8 +1961,8 @@ function SalesDashboard() {
               })}
               <g transform="translate(30,0)">
                 {monthly.map((d, i) => {
-                  const bh = (d.売上 / chartMaxVal) * (chartH - 20);
-                  const fh = d.forecast ? ((d.forecast - d.売上) / chartMaxVal) * (chartH - 20) : 0;
+                  const bh = (d.売上 / chartMaxVal) * (chartH - 45);
+                  const fh = d.forecast ? ((d.forecast - d.売上) / chartMaxVal) * (chartH - 45) : 0;
                   const x = i * (barW + gap);
                   const isLast = i === monthly.length - 1;
                   return (
@@ -1942,15 +1970,24 @@ function SalesDashboard() {
                       <rect x={x} y={chartH - bh} width={barW} height={bh} fill={isLast ? `${R}85` : R} rx={3} />
                       {isLast && fh > 0 && <rect x={x} y={chartH - bh - fh} width={barW} height={fh} fill={`${R}25`} rx={3} stroke={R} strokeWidth={1.5} strokeDasharray="4,3" />}
                       <text x={x + barW/2} y={chartH + 14} textAnchor="middle" fontSize={10} fill={isLast ? R : GRAY}>{d.m}</text>
-                      {isLast ? <text x={x + barW/2} y={chartH - bh - fh - 6} textAnchor="middle" fontSize={9} fill={R}>予測¥{(d.forecast/10000).toFixed(0)}万</text>
-                               : <text x={x + barW/2} y={chartH - bh - 5} textAnchor="middle" fontSize={9} fill={GRAY_L}>¥{(d.売上/10000).toFixed(0)}万</text>}
+                      {isLast ? (
+                        <>
+                          <rect x={x + barW/2 - 22} y={chartH - bh - fh - 16} width={44} height={13} fill="white" fillOpacity={0.92} rx={2} />
+                          <text x={x + barW/2} y={chartH - bh - fh - 6} textAnchor="middle" fontSize={9} fontWeight="600" fill={R}>予測¥{(d.forecast/10000).toFixed(0)}万</text>
+                        </>
+                      ) : (
+                        <>
+                          <rect x={x + barW/2 - 18} y={chartH - bh - 15} width={36} height={12} fill="white" fillOpacity={0.85} rx={2} />
+                          <text x={x + barW/2} y={chartH - bh - 6} textAnchor="middle" fontSize={9} fill={GRAY_L}>¥{(d.売上/10000).toFixed(0)}万</text>
+                        </>
+                      )}
                     </g>
                   );
                 })}
                 <polyline points={pts.join(" ")} fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                 {monthly.map((d, i) => {
                   const [x, y] = pts[i].split(",").map(Number);
-                  return (<g key={i}><circle cx={x} cy={y} r={3} fill={GREEN} /><text x={x} y={y - 8} textAnchor="middle" fontSize={8} fill={GREEN}>¥{(d.粗利/10000).toFixed(0)}万</text></g>);
+                  return (<g key={i}><circle cx={x} cy={y} r={3} fill={GREEN} /><text x={x} y={y - 8} textAnchor="middle" fontSize={8} fill={GREEN}>{d.粗利率}%</text></g>);
                 })}
               </g>
             </svg>
@@ -2198,7 +2235,7 @@ function VinLedgerScreen() {
 /* ─── NAV ─── */
 const OPS_NAV = [
   {id:9,Icon:BarChart2,label:"売上ダッシュボード",sub:"売上分析"},
-  {id:0,Icon:LayoutDashboard,label:"受付ダッシュボード",sub:"問い合わせ管理"},
+  {id:0,Icon:LayoutDashboard,label:"受付対応",sub:"問い合わせ管理"},
   {id:1,Icon:ShoppingCart,label:"仕入先比較",sub:"仕入比較"},
   {id:2,Icon:FileText,label:"見積作成",sub:"見積書"},
   {id:3,Icon:Package,label:"受注・発送",sub:"受注管理"},
