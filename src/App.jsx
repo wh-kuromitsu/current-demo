@@ -1986,13 +1986,12 @@ function StaffMaster() {
 function SalesDashboard() {
   const [period, setPeriod] = useState("月次");
   const monthly = [
-    { m:"11月", 売上:13200000, 粗利:2970000, 粗利率:22.5, 件数:98,  forecast:null },
-    { m:"12月", 売上:14100000, 粗利:3500000, 粗利率:24.8, 件数:108, forecast:null },
-    { m:"1月",  売上:17000000, 粗利:4640000, 粗利率:27.3, 件数:132, forecast:null },
-    { m:"2月",  売上:13000000, 粗利:2700000, 粗利率:20.8, 件数:95,  forecast:null },
-    { m:"3月",  売上:15500000, 粗利:4050000, 粗利率:26.1, 件数:118, forecast:null },
-    { m:"4月",  売上:19800000, 粗利:5720000, 粗利率:28.9, 件数:152, forecast:null },
-    { m:"5月",  売上:8600000,  粗利:2520000, 粗利率:29.3, 件数:67,  forecast:24000000 },
+    { m:"11月", 売上:13500000, 粗利:3038000, 粗利率:22.5, 件数:88,  forecast:null },
+    { m:"12月", 売上:15200000, 粗利:3686000, 粗利率:24.2, 件数:99,  forecast:null },
+    { m:"1月", 売上:13800000, 粗利:3243000, 粗利率:23.5, 件数:90,  forecast:null },
+    { m:"2月", 売上:15600000, 粗利:3900000, 粗利率:25.0, 件数:103, forecast:null },
+    { m:"3月", 売上:17400000, 粗利:4654000, 粗利率:26.7, 件数:118, forecast:null },
+    { m:"4月", 売上:7400000,  粗利:2072000, 粗利率:28.0, 件数:49,  forecast:20000000 },
   ];
   const kpis = [
     { label:"今月売上（速報）", value:"¥3,140,000", sub:"予測: ¥8,800,000（前月超え）", up:true, color:R, bg:"#FEF2F2", border:"#FECACA" },
@@ -2034,7 +2033,7 @@ function SalesDashboard() {
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div style={{ fontSize:13, color:GRAY }}>2025年10月 〜 2026年4月（速報）</div>
+        <div style={{ fontSize:13, color:GRAY }}>2025年4月 〜 2025年9月（速報）</div>
         <div style={{ display:"flex", gap:6 }}>
           {["月次","四半期"].map(p => (
             <button key={p} onClick={() => setPeriod(p)} style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontWeight:500, cursor:"pointer", background:period===p?R:WHITE, color:period===p?WHITE:GRAY, border:`1px solid ${period===p?R:BORDER}`, fontFamily:"inherit" }}>{p}</button>
