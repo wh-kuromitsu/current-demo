@@ -1518,6 +1518,7 @@ function PaymentScreen() {
     { no:"INV-2031", customer:"横浜ユーロモータース", staff:"宮嶋", amount:42100, confirmed:42100, issued:"04/01", due:"04/30", payStatus:"入金済",      dunStatus:"督促不要" },
     { no:"INV-2028", customer:"名古屋プレミアムAuto", staff:"小嶋", amount:8900,  confirmed:0,     issued:"03/28", due:"04/20", payStatus:"未入金",      dunStatus:"督促前" },
     { no:"INV-2025", customer:"京都輸入車工房",       staff:"宮嶋", amount:33700, confirmed:20000, issued:"03/25", due:"04/20", payStatus:"一部入金あり", dunStatus:"督促中（電話済）" },
+    { no:"INV-2019", customer:"名古屋プレミアムAuto", staff:"小嶋", amount:12400, confirmed:13000, issued:"03/10", due:"03/31", payStatus:"過入金あり",   dunStatus:"督促不要" },
   ];
 
   const monthlyDrafts = [
@@ -1539,30 +1540,20 @@ function PaymentScreen() {
   return (
     <>
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <div style={{ background:PURPLE_L, border:`1px solid #DDD6FE`, borderRadius:10, padding:"14px 20px", display:"flex", alignItems:"center", gap:14 }}>
-        <div style={{ width:36, height:36, borderRadius:8, background:WHITE, border:`1px solid #DDD6FE`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <Wallet size={16} style={{ color:PURPLE }} />
-        </div>
-        <div style={{ flex:1 }}>
-          <div style={{ fontWeight:700, fontSize:13, color:PURPLE }}>経理アカウント — 請求書発行・入金管理</div>
-          <div style={{ fontSize:12, color:GRAY, marginTop:1 }}>入金確認・督促 → 経理主担当 ／ 督促エスカレーション → 事業部へ引継ぎ</div>
-          <div style={{ display:"flex", gap:8, marginTop:6 }}>
-            {Object.entries(staffInfo).map(([name, info]) => (
-              <div key={name} style={{ background:WHITE, border:`1px solid #DDD6FE`, borderRadius:6, padding:"4px 10px", fontSize:11, color:PURPLE, display:"flex", alignItems:"center", gap:6 }}>
-                <span style={{ fontWeight:600 }}>{info.fullName}</span>
-                <span style={{ color:GRAY_L }}>📞 {info.phone}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ display:"flex", gap:24 }}>
-          {[{l:"未入金",v:payCounts["未入金"]||0,c:R},{l:"一部入金",v:payCounts["一部入金あり"]||0,c:AMBER},{l:"入金済",v:payCounts["入金済"]||0,c:GREEN}].map(s => (
-            <div key={s.l} style={{ textAlign:"center" }}>
-              <div style={{ fontSize:22, fontWeight:700, color:s.c, fontFamily:"JetBrains Mono" }}>{s.v}</div>
-              <div style={{ fontSize:11, color:GRAY }}>{s.l}</div>
+      <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:"14px 20px", display:"flex", alignItems:"center", gap:32, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>
+        {[
+          {l:"未入金",    v:payCounts["未入金"]||0,     total:invoices.filter(i=>getPay(i)==="未入金").reduce((s,i)=>s+i.amount,0),      c:R},
+          {l:"一部入金",  v:payCounts["一部入金あり"]||0, total:invoices.filter(i=>getPay(i)==="一部入金あり").reduce((s,i)=>s+i.amount,0), c:AMBER},
+          {l:"入金済",   v:payCounts["入金済"]||0,       total:invoices.filter(i=>getPay(i)==="入金済").reduce((s,i)=>s+i.amount,0),      c:GREEN},
+        ].map(s => (
+          <div key={s.l} style={{ display:"flex", alignItems:"center", gap:14, padding:"6px 18px", borderRadius:8, background:s.c===R?"#FEF2F2":s.c===AMBER?AMBER_L:GREEN_L, border:`1px solid ${s.c===R?"#FECACA":s.c===AMBER?"#FDE68A":"#BBF7D0"}` }}>
+            <div style={{ fontSize:28, fontWeight:700, color:s.c, fontFamily:"JetBrains Mono", lineHeight:1 }}>{s.v}</div>
+            <div>
+              <div style={{ fontSize:11, color:s.c, fontWeight:600 }}>{s.l}</div>
+              <div style={{ fontSize:12, fontWeight:700, color:s.c, fontFamily:"JetBrains Mono", marginTop:2 }}>¥{s.total.toLocaleString()}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
       <div style={{ display:"flex", background:WHITE, borderRadius:"10px 10px 0 0", border:`1px solid ${BORDER}`, overflow:"hidden" }}>
         {["入金管理","月末一括請求書"].map(t => (
@@ -1608,7 +1599,7 @@ function PaymentScreen() {
           </div>
           <div style={{ ...S, overflow:"auto" }}>
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12, minWidth:900 }}>
-              <thead><tr style={{ background:"#FAFAFA" }}>{["請求書番号","顧客名","担当者","請求額","入金確認額","差額","入金ステータス","督促ステータス","操作"].map(h=><th key={h} style={{ padding:"9px 12px", textAlign:"left", fontSize:11, color:GRAY_L, fontWeight:600, borderBottom:`1px solid ${BORDER}`, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead>
+              <thead><tr style={{ background:"#FAFAFA" }}>{["請求書番号","顧客名","社内担当","顧客連絡先","請求額","入金確認額","差額","入金ステータス","督促ステータス","操作"].map(h=><th key={h} style={{ padding:"9px 12px", textAlign:"left", fontSize:11, color:GRAY_L, fontWeight:600, borderBottom:`1px solid ${BORDER}`, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead>
               <tbody>{filtered.map((inv, i) => {
                 const ps = getPay(inv), ds = getDun(inv), diff = getDiff(inv);
                 const si = staffInfo[inv.staff];
@@ -1618,7 +1609,12 @@ function PaymentScreen() {
                   <tr key={inv.no} style={{ borderBottom:`1px solid ${BORDER}`, animation:`fadeUp .25s ${i*.04}s ease both`, opacity:0 }}>
                     <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", fontSize:11, color:R, fontWeight:600, whiteSpace:"nowrap" }}>{inv.no}</td>
                     <td style={{ padding:"12px 12px", fontWeight:600, color:DARK, whiteSpace:"nowrap" }}>{inv.customer}</td>
-                    <td style={{ padding:"12px 12px" }}><div style={{ fontSize:11, color:DARK, whiteSpace:"nowrap" }}>{si?.fullName}</div><div style={{ fontSize:10, color:GRAY_L }}>📞 {si?.phone}</div></td>
+                    <td style={{ padding:"12px 12px", whiteSpace:"nowrap" }}>
+                      <div style={{ fontSize:11, color:DARK }}>{si?.fullName}</div>
+                    </td>
+                    <td style={{ padding:"12px 12px", whiteSpace:"nowrap" }}>
+                      <div style={{ fontSize:11, color:GRAY }}>📞 {si?.phone}</div>
+                    </td>
                     <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", color:DARK, whiteSpace:"nowrap" }}>¥{inv.amount.toLocaleString()}</td>
                     <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", color:inv.confirmed>0?GREEN:GRAY_L, whiteSpace:"nowrap" }}>{inv.confirmed > 0 ? `¥${inv.confirmed.toLocaleString()}` : "―"}</td>
                     <td style={{ padding:"12px 12px", fontFamily:"JetBrains Mono", whiteSpace:"nowrap" }}>{diff===0?<span style={{ color:GRAY_L }}>―</span>:diff<0?<span style={{ color:R, fontWeight:700 }}>¥{diff.toLocaleString()}</span>:<span style={{ color:PURPLE, fontWeight:700 }}>+¥{diff.toLocaleString()}</span>}</td>
