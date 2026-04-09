@@ -1115,86 +1115,201 @@ MAIL: kojima@currentmotor.co.jp`;
         </div>
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-        <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:24, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
-            <div>
-              <div style={{ fontWeight:700, fontSize:15, color:"#1a1a2e" }}>WORK HERO株式会社</div>
-              <div style={{ fontSize:11, color:"#666", marginTop:2 }}>〒107-0052 東京都港区赤坂4丁目11-21</div>
-              <div style={{ fontSize:11, color:"#666" }}>TEL: 045-XXX-XXXX</div>
+{/* ── 右カラム: 見積書プレビュー ── */}
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+          <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:24, boxShadow:"0 1px 3px rgba(0,0,0,0.05)", fontSize:11 }}>
+
+            {/* ── ① ヘッダー: 宛先（左）＋ ロゴ・発行者（右） ── */}
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
+              {/* 左: 宛先 */}
+              <div>
+                <div style={{ color:"#666" }}>〒216-0012 神奈川県川崎市宮前区水沢2-17-10</div>
+                <div style={{ color:"#666", marginBottom:8 }}>TEL:044-978-5678　FAX:044-978-5679</div>
+                <div style={{ fontWeight:700, fontSize:14, color:DARK }}>WORK HERO株式会社　整備ユニット</div>
+                <div style={{ fontWeight:700, fontSize:13, color:DARK }}>テックセンター　御中</div>
+              </div>
+              {/* 右: ロゴ＋発行者 */}
+              <div style={{ textAlign:"right" }}>
+                <img
+                  src="https://scontent-nrt1-2.xx.fbcdn.net/v/t39.30808-1/294942328_340184231660789_7377181289936199718_n.jpg?stp=dst-jpg_s240x240_tt6&_nc_cat=101&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=Zozwpq6FMGEQ7kNvwGghh-i&_nc_oc=Adrpczj8AXpTeRaYzhh4fke_AFTIWP5xJ4YDIn0iJ4gKCTh4DB_Gxlc6m6dJKU__dnQ5Kp4bXn73SsUGVy2FkWUu&_nc_zt=24&_nc_ht=scontent-nrt1-2.xx&_nc_gid=ikiejMHU7Coj6Jc0l8lWpg&_nc_ss=7a3a8&oh=00_Af1SWRKy9OirOjladMkmXt6WLBhePSLBOaKW8vQfSbUJtw&oe=69DCC5F5"
+                  alt="Current Motor"
+                  style={{ height:36, objectFit:"contain", display:"block", marginLeft:"auto" }}
+                />
+                <div style={{ fontWeight:600, color:DARK, marginTop:4 }}>カレント自動車株式会社</div>
+                <div style={{ color:"#666", marginTop:2 }}>カレントパーツサプライ</div>
+                <div style={{ color:"#666" }}>〒222-0033 神奈川県横浜市港北区新横浜2-5-11</div>
+                <div style={{ color:"#666" }}>金子第1ビル2F</div>
+                <div style={{ color:"#666" }}>TEL:045-479-9957　FAX:045-479-9958</div>
+                <div style={{ color:"#666", marginTop:2 }}>京浜ロジスティクスセンタ / 尼崎ロジスティクスセンタ</div>
+              </div>
             </div>
-            <div style={{ textAlign:"right" }}>
-              <div style={{ background:R, color:WHITE, padding:"4px 14px", borderRadius:4, fontSize:12, fontWeight:700 }}>お 見 積 書</div>
-              <div style={{ fontSize:11, color:"#999", marginTop:4 }}>No. Q-2041 / 2026/04/07</div>
+
+            <div style={{ borderTop:`2px solid ${DARK}`, marginBottom:12 }} />
+
+            {/* ── ② 件名エリア（左）＋ 発行情報（右） ── */}
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, gap:16 }}>
+              {/* 左: 件名・納期等 */}
+              <div style={{ flex:1, display:"flex", flexDirection:"column", gap:5 }}>
+                {[
+                  ["件名",         "フロントコントロールアーム左 他"],
+                  ["納期",         "2営業日（在庫あり）"],
+                  ["納入先",       "WORK HERO株式会社"],
+                  ["お支払条件",   "月末締め翌月末払い"],
+                  ["お見積有効期限","2026/04/21（2週間）"],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={{ display:"flex", gap:8, alignItems:"baseline" }}>
+                    <span style={{ color:GRAY, minWidth:88, flexShrink:0 }}>{lbl}</span>
+                    <span style={{ borderBottom:`1px solid #ccc`, flex:1, paddingBottom:1, color:DARK }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+              {/* 右: 合計金額＋発行情報 */}
+              <div style={{ display:"flex", flexDirection:"column", gap:8, minWidth:180 }}>
+                <div style={{ border:`1px solid ${DARK}`, borderRadius:4, padding:"8px 14px", textAlign:"center" }}>
+                  <div style={{ color:GRAY, marginBottom:2 }}>合計金額（税込）</div>
+                  <div style={{ fontFamily:"JetBrains Mono", fontSize:18, fontWeight:700, color:R }}>¥{"50,875"}</div>
+                </div>
+                <div style={{ border:`1px solid ${BORDER}`, borderRadius:4, padding:"8px 12px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between" }}><span style={{ color:GRAY }}>発行日</span><span style={{ color:DARK }}>2026.04.07</span></div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}><span style={{ color:GRAY }}>見積No</span><span style={{ fontFamily:"JetBrains Mono", color:R }}>Q-2041</span></div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}><span style={{ color:GRAY }}>担当</span><span style={{ color:DARK }}>小嶋　鹿乃雲</span></div>
+                </div>
+              </div>
             </div>
+
+            <div style={{ color:GRAY_L, marginBottom:8 }}>ご照会の件、下記の通りお見積り申し上げます。</div>
+
+            {/* ── ③ 明細テーブル ── */}
+            <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:0 }}>
+              <thead>
+                <tr style={{ background:DARK, color:WHITE }}>
+                  {["品　　名", "数量", "単位", "単　価", "税抜金額"].map(h => (
+                    <th key={h} style={{ padding:"5px 8px", textAlign:h==="品　　名"?"left":"right", fontWeight:500, whiteSpace:"nowrap" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom:"1px solid #eee" }}>
+                  <td style={{ padding:"8px" }}>
+                    フロントコントロールアーム左<br/>
+                    <span style={{ fontSize:10, color:"#999", fontFamily:"monospace" }}>31126855157　BMW G20 / OEM品</span>
+                  </td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>1</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>個</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>¥{final.toLocaleString()}</td>
+                  <td style={{ padding:"8px", textAlign:"right", fontWeight:600 }}>¥{final.toLocaleString()}</td>
+                </tr>
+                <tr style={{ borderBottom:"1px solid #eee" }}>
+                  <td style={{ padding:"8px" }}>
+                    イグニッションコイル（High Power）<br/>
+                    <span style={{ fontSize:10, color:"#999", fontFamily:"monospace" }}>12138643360 G20 / OEM品</span>
+                  </td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>4</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>個</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>¥{"6,800"}</td>
+                  <td style={{ padding:"8px", textAlign:"right", fontWeight:600 }}>¥{"27,200"}</td>
+                </tr>
+                <tr style={{ borderBottom:"1px solid #eee" }}>
+                  <td style={{ padding:"8px" }}>
+                    湿式エアクリーナーエレメント<br/>
+                    <span style={{ fontSize:10, color:"#999", fontFamily:"monospace" }}>13718691835 G20 / OEM品</span>
+                  </td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>1</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>個</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>¥{"5,200"}</td>
+                  <td style={{ padding:"8px", textAlign:"right", fontWeight:600 }}>¥{"5,200"}</td>
+                </tr>
+                <tr style={{ borderBottom:"1px solid #eee" }}>
+                  <td style={{ padding:"8px" }}>
+                    フロント ブレーキパッド センサー<br/>
+                    <span style={{ fontSize:10, color:"#999", fontFamily:"monospace" }}>34356870349 G20 / OEM品</span>
+                  </td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>1</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>個</td>
+                  <td style={{ padding:"8px", textAlign:"right" }}>¥{"3,900"}</td>
+                  <td style={{ padding:"8px", textAlign:"right", fontWeight:600 }}>¥{"3,900"}</td>
+                </tr>
+                <tr style={{ borderBottom:"1px solid #eee" }}>
+                  <td style={{ padding:"8px" }}>
+                    送料<br/>
+                    <span style={{ fontSize:10, color:"#999", fontFamily:"monospace" }}></span>
+                  </td>
+                  <td style={{ padding:"8px", textAlign:"right" }}></td>
+                  <td style={{ padding:"8px", textAlign:"right" }}></td>
+                  <td style={{ padding:"8px", textAlign:"right" }}></td>
+                  <td style={{ padding:"8px", textAlign:"right", fontWeight:600 }}>¥{"550"}</td>
+                </tr>
+                {/* 空行（PDFに合わせて余白確保） */}
+                {[...Array(4)].map((_,i) => (
+                  <tr key={i} style={{ borderBottom:"1px solid #eee" }}>
+                    <td style={{ padding:"6px 8px" }}></td>
+                    <td /><td /><td /><td />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* ── ④ フッター: 振込先・備考（左）＋ 小計・税・合計（右） ── */}
+            <div style={{ display:"flex", gap:16, marginTop:8, borderTop:"1px solid #eee", paddingTop:10 }}>
+              {/* 左: 振込先・備考 */}
+              <div style={{ flex:1 }}>
+                <div style={{ display:"flex", gap:12 }}>
+                  <div style={{ flex:1, border:`1px solid ${BORDER}`, borderRadius:4, padding:"8px 10px" }}>
+                    <div style={{ fontWeight:600, color:DARK, marginBottom:4 }}>振込先</div>
+                    <div style={{ color:GRAY }}>PayPay銀行 本店営業部</div>
+                    <div style={{ color:GRAY }}>普通 1553622</div>
+                    <div style={{ color:GRAY }}>カレント自動車株式会社</div>
+                    <div style={{ color:GRAY_L, fontSize:10, marginTop:6 }}>※振込手数料はお客様にてご負担くださいませ。</div>
+                    <div style={{ color:GRAY_L, fontSize:10 }}>※6ヵ月以内かつ10,000km未満の部品保証がございます。</div>
+                  </div>
+                  <div style={{ flex:1, border:`1px solid ${BORDER}`, borderRadius:4, padding:"8px 10px" }}>
+                    <div style={{ fontWeight:600, color:DARK, marginBottom:4 }}>備　考</div>
+                  </div>
+                </div>
+              </div>
+              {/* 右: 小計・消費税・合計 */}
+              <div style={{ minWidth:180 }}>
+                {[
+                  ["【 小　計 】", `¥${"46,250"}`],
+                  ["【 消費税 】", `¥${"4,625"}`],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={{ display:"flex", justifyContent:"space-between", padding:"4px 0", borderBottom:"1px solid #eee" }}>
+                    <span style={{ color:GRAY }}>{lbl}</span>
+                    <span style={{ fontFamily:"JetBrains Mono", color:DARK }}>{val}</span>
+                  </div>
+                ))}
+                <div style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:`2px solid ${DARK}` }}>
+                  <span style={{ fontWeight:700, color:DARK }}>【 合　計 】</span>
+                  <span style={{ fontFamily:"JetBrains Mono", fontWeight:700, fontSize:14, color:R }}>¥{"50,875"}</span>
+                </div>
+                <div style={{ textAlign:"right", color:GRAY_L, marginTop:6 }}>【 1 / 1 】</div>
+              </div>
+            </div>
+
           </div>
-          <div style={{ fontWeight:600, fontSize:13, borderTop:`2px solid #1a1a2e`, paddingTop:10, marginBottom:10 }}>大阪モーター整備 御中</div>
-          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-            <thead><tr style={{ background:"#1a1a2e", color:WHITE }}>{["品名","品番","数量","単価","金額"].map(h=><th key={h} style={{ padding:"5px 8px", textAlign:"left", fontWeight:500 }}>{h}</th>)}</tr></thead>
-            <tbody>
-              <tr style={{ borderBottom:"1px solid #eee" }}>
-                <td style={{ padding:"8px" }}>テンションストラット（プルストラット）左<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
-                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>31126855157</td>
-                <td style={{ padding:"8px", textAlign:"center" }}>1</td>
-                <td style={{ padding:"8px", textAlign:"right" }}>¥{"12,800"}</td>
-                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"12,800"}</td>
-              </tr>
-              <tr style={{ borderBottom:"1px solid #eee" }}>
-                <td style={{ padding:"8px" }}>イグニッションコイル（High Power）<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
-                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>12138643360</td>
-                <td style={{ padding:"8px", textAlign:"center" }}>4</td>
-                <td style={{ padding:"8px", textAlign:"right" }}>¥{"6,800"}</td>
-                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"27,200"}</td>
-              </tr>
-              <tr style={{ borderBottom:"1px solid #eee" }}>
-                <td style={{ padding:"8px" }}>湿式エアクリーナーエレメント<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
-                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>13718691835</td>
-                <td style={{ padding:"8px", textAlign:"center" }}>1</td>
-                <td style={{ padding:"8px", textAlign:"right" }}>¥{"5,200"}</td>
-                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"5,200"}</td>
-              </tr>
-              <tr style={{ borderBottom:"1px solid #eee" }}>
-                <td style={{ padding:"8px" }}>フロント ブレーキパッド センサー<br/><span style={{ fontSize:10, color:"#999" }}>BMW G20 / OEM品</span></td>
-                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}>34356870349</td>
-                <td style={{ padding:"8px", textAlign:"center" }}>1</td>
-                <td style={{ padding:"8px", textAlign:"right" }}>¥{"3,900"}</td>
-                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{"3,900"}</td>
-              </tr>
-              <tr style={{ borderBottom:"1px solid #eee" }}>
-                <td style={{ padding:"8px" }}>送料</td>
-                <td style={{ padding:"8px", fontFamily:"monospace", fontSize:10 }}></td>
-                <td style={{ padding:"8px", textAlign:"center" }}></td>
-                <td style={{ padding:"8px", textAlign:"right" }}></td>
-                <td style={{ padding:"8px", textAlign:"right", fontWeight:700 }}>¥{550}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div style={{ display:"flex", justifyContent:"flex-end", gap:16, marginTop:10, fontSize:11, color:"#555" }}>
-            <span>小計: ¥{"49,650"}</span>
-            <span>消費税(10%): ¥{"4,965"}</span>
-            <span style={{ fontWeight:700, color:"#1a1a2e" }}>合計: ¥{"54,615"}</span>
-          </div>
-          <div style={{ marginTop:10, fontSize:10, color:"#999", borderTop:"1px solid #eee", paddingTop:8 }}>※ 納期: 2営業日 / お支払: 月末締め翌月末払い</div>
-        </div>
-        <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:16, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
-            {["FAX","メール"].map(m => (
-              <button key={m} onClick={() => setMethod(m)} style={{ padding:"9px 0", borderRadius:7, fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit", background:method===m?R:WHITE, color:method===m?WHITE:GRAY, border:`1px solid ${method===m?R:BORDER}`, transition:"all .15s" }}>
-                {m==="FAX" ? "📠 FAX送付" : "📧 メール送付"}
+
+          {/* ── 送付方法 ── */}
+          <div style={{ background:WHITE, border:`1px solid ${BORDER}`, borderRadius:10, padding:16, boxShadow:"0 1px 3px rgba(0,0,0,0.05)" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+              {["FAX","メール"].map(m => (
+                <button key={m} onClick={() => setMethod(m)} style={{ padding:"9px 0", borderRadius:7, fontSize:13, fontWeight:500, cursor:"pointer", fontFamily:"inherit", background:method===m?R:WHITE, color:method===m?WHITE:GRAY, border:`1px solid ${method===m?R:BORDER}`, transition:"all .15s" }}>
+                  {m==="FAX" ? "📠 FAX送付" : "📧 メール送付"}
+                </button>
+              ))}
+            </div>
+            {!sent ? (
+              <button
+                onClick={() => { if (method === "メール") { setShowEmailModal(true); } else { setSent(true); } }}
+                style={{ width:"100%", padding:"12px 0", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
+              >
+                {method === "メール" ? "📧 見積書をメール送付する →" : "📠 FAXで送付する →"}
               </button>
-            ))}
+            ) : (
+              <div style={{ textAlign:"center", padding:"12px 0", color:GREEN, fontWeight:600, fontSize:14 }}>
+                ✓ 送付完了（{method} / {new Date().toLocaleTimeString("ja-JP")}）
+              </div>
+            )}
           </div>
-          {!sent ? (
-            <button
-              onClick={() => { if (method === "メール") { setShowEmailModal(true); } else { setSent(true); } }}
-              style={{ width:"100%", padding:"12px 0", background:R, color:WHITE, border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}
-            >
-              {method === "メール" ? "📧 見積書をメール送付する →" : "📠 FAXで送付する →"}
-            </button>
-          ) : (
-            <div style={{ textAlign:"center", padding:"12px 0", color:GREEN, fontWeight:600, fontSize:14 }}>
-              ✓ 送付完了（{method} / {new Date().toLocaleTimeString("ja-JP")}）
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -1871,13 +1986,13 @@ function StaffMaster() {
 function SalesDashboard() {
   const [period, setPeriod] = useState("月次");
   const monthly = [
-    { m:"10月", 売上:4820000, 粗利:1350000, 粗利率:22.5, 件数:38, forecast:null },
-    { m:"11月", 売上:5140000, 粗利:1480000, 粗利率:24.8, 件数:42, forecast:null },
-    { m:"12月", 売上:6210000, 粗利:1820000, 粗利率:27.3, 件数:51, forecast:null },
-    { m:"1月",  売上:4380000, 粗利:1190000, 粗利率:20.8, 件数:35, forecast:null },
-    { m:"2月",  売上:5670000, 粗利:1640000, 粗利率:26.1, 件数:44, forecast:null },
-    { m:"3月",  売上:7280000, 粗利:2140000, 粗利率:28.9, 件数:58, forecast:null },
-    { m:"4月",  売上:3140000, 粗利:920000,  粗利率:29.3, 件数:27, forecast:8800000 },
+    { m:"11月", 売上:4820000, 粗利:1350000, 粗利率:22.5, 件数:38, forecast:null },
+    { m:"12月", 売上:5140000, 粗利:1480000, 粗利率:24.8, 件数:42, forecast:null },
+    { m:"1月", 売上:6210000, 粗利:1820000, 粗利率:27.3, 件数:51, forecast:null },
+    { m:"2月",  売上:4380000, 粗利:1190000, 粗利率:20.8, 件数:35, forecast:null },
+    { m:"3月",  売上:5670000, 粗利:1640000, 粗利率:26.1, 件数:44, forecast:null },
+    { m:"4月",  売上:7280000, 粗利:2140000, 粗利率:28.9, 件数:58, forecast:null },
+    { m:"5月",  売上:3140000, 粗利:920000,  粗利率:29.3, 件数:27, forecast:8800000 },
   ];
   const kpis = [
     { label:"今月売上（速報）", value:"¥3,140,000", sub:"予測: ¥8,800,000（前月超え）", up:true, color:R, bg:"#FEF2F2", border:"#FECACA" },
