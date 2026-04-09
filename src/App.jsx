@@ -2027,12 +2027,13 @@ function SalesDashboard() {
     { cat:"その他",         sales:220000,  pct:7.1,  color:GRAY },
   ];
   const chartMaxVal = Math.max(...monthly.map(d => d.forecast || d.売上));
-  const chartH = 160, barW = 42, gap = 14;
-  const totalW = monthly.length * (barW + gap) - gap;
+  const chartH = 160, barW = 26, barW2 = 22, innerGap = 4, gap = 14;
+  const pairW = barW + innerGap + barW2;
+  const totalW = monthly.length * (pairW + gap) - gap;
   const grossMin = Math.min(...monthly.map(d => d.粗利率));
   const grossMax = Math.max(...monthly.map(d => d.粗利率));
   const pts = monthly.map((d, i) => {
-    const x = i * (barW + gap) + barW / 2;
+    const x = i * (pairW + gap) + pairW / 2;
     const y = chartH - ((d.粗利率 - grossMin) / (grossMax - grossMin || 1)) * (chartH - 45) - 8;
     return `${x},${y}`;
   });
@@ -2066,6 +2067,7 @@ function SalesDashboard() {
             <div style={{ display:"flex", gap:10, fontSize:11, color:GRAY_L }}>
               <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:R, display:"inline-block" }}></span>売上</span>
               <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:`${R}35`, border:`1px dashed ${R}`, display:"inline-block" }}></span>予測</span>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:BLUE, display:"inline-block", opacity:0.75 }}></span>粗利額</span>
               <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:10, height:2, background:GREEN, display:"inline-block" }}></span>粗利率</span>
             </div>
           </div>
@@ -2080,10 +2082,13 @@ function SalesDashboard() {
                 {monthly.map((d, i) => {
                   const bh = (d.売上 / chartMaxVal) * (chartH - 45);
                   const fh = d.forecast ? ((d.forecast - d.売上) / chartMaxVal) * (chartH - 45) : 0;
-                  const x = i * (barW + gap);
+                  const x = i * (pairW + gap);
+                  const x2 = x + barW + innerGap; // 粗利棒のX座標
+                  const bh2 = (d.粗利 / chartMaxVal) * (chartH - 45);
                   const isLast = i === monthly.length - 1;
                   return (
                     <g key={d.m}>
+                      <rect x={x2} y={chartH - bh2} width={barW2} height={bh2} fill={BLUE} rx={3} opacity={0.75} />
                       <rect x={x} y={chartH - bh} width={barW} height={bh} fill={isLast ? `${R}85` : R} rx={3} />
                       {isLast && fh > 0 && <rect x={x} y={chartH - bh - fh} width={barW} height={fh} fill={`${R}25`} rx={3} stroke={R} strokeWidth={1.5} strokeDasharray="4,3" />}
                       <text x={x + barW/2} y={chartH + 14} textAnchor="middle" fontSize={10} fill={isLast ? R : GRAY}>{d.m}</text>
