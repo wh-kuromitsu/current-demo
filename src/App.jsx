@@ -1985,19 +1985,26 @@ function StaffMaster() {
    ═══════════════════════════════════════════════════ */
 function SalesDashboard() {
   const [period, setPeriod] = useState("月次");
+  // 変更後（12ヶ月: 10月〜9月）
   const monthly = [
-    { m:"11月", 売上:13500000, 粗利:3038000, 粗利率:22.5, 件数:88,  forecast:null },
-    { m:"12月", 売上:15200000, 粗利:3686000, 粗利率:24.2, 件数:99,  forecast:null },
-    { m:"1月", 売上:13800000, 粗利:3243000, 粗利率:23.5, 件数:90,  forecast:null },
-    { m:"2月", 売上:15600000, 粗利:3900000, 粗利率:25.0, 件数:103, forecast:null },
-    { m:"3月", 売上:17400000, 粗利:4654000, 粗利率:26.7, 件数:118, forecast:null },
-    { m:"4月", 売上:7400000,  粗利:2072000, 粗利率:28.0, 件数:49,  forecast:20000000 },
+    { m:"10月", 売上:13200000, 粗利:2904000, 粗利率:22.0, 件数:86,  forecast:null },
+    { m:"11月", 売上:15100000, 粗利:3549000, 粗利率:23.5, 件数:98,  forecast:null },
+    { m:"12月", 売上:14200000, 粗利:3238000, 粗利率:22.8, 件数:92,  forecast:null },
+    { m:"1月",  売上:13600000, 粗利:3128000, 粗利率:23.0, 件数:88,  forecast:null },
+    { m:"2月",  売上:15800000, 粗利:3871000, 粗利率:24.5, 件数:103, forecast:null },
+    { m:"3月",  売上:14700000, 粗利:3528000, 粗利率:24.0, 件数:96,  forecast:null },
+    { m:"4月",  売上:16400000, 粗利:4133000, 粗利率:25.2, 件数:108, forecast:null },
+    { m:"5月",  売上:15300000, 粗利:3795000, 粗利率:24.8, 件数:100, forecast:null },
+    { m:"6月",  売上:17600000, 粗利:4576000, 粗利率:26.0, 件数:116, forecast:null },
+    { m:"7月",  売上:16500000, 粗利:4373000, 粗利率:26.5, 件数:109, forecast:null },
+    { m:"8月",  売上:18300000, 粗利:4997000, 粗利率:27.3, 件数:122, forecast:null },
+    { m:"9月",  売上:8500000,  粗利:2380000, 粗利率:28.0, 件数:56,  forecast:20000000 },
   ];
   const kpis = [
-    { label:"今月売上（速報）", value:"¥3,140,000", sub:"予測: ¥8,800,000（前月超え）", up:true, color:R, bg:"#FEF2F2", border:"#FECACA" },
-    { label:"今月粗利",         value:"¥920,000",   sub:"粗利率 29.3%",  up:true, color:GREEN, bg:GREEN_L, border:"#BBF7D0" },
-    { label:"今月受注件数",     value:"27件",        sub:"前月比 速報値", up:true, color:BLUE, bg:BLUE_L, border:"#BFDBFE" },
-    { label:"月次平均粗利率",   value:"29.1%",       sub:"6ヶ月平均",     up:true, color:PURPLE, bg:PURPLE_L, border:"#DDD6FE" },
+    { label:"今月売上（速報）", value:"¥8,500,000",  sub:"予測: ¥20,000,000（前月超え）", up:true, color:R,      bg:"#FEF2F2", border:"#FECACA" },
+    { label:"今月粗利",         value:"¥2,380,000",  sub:"粗利率 28.0%",                  up:true, color:GREEN,  bg:GREEN_L,   border:"#BBF7D0" },
+    { label:"今月受注件数",     value:"56件",         sub:"前月比 速報値",                 up:true, color:BLUE,   bg:BLUE_L,    border:"#BFDBFE" },
+    { label:"月次平均粗利率",   value:"24.8%",        sub:"12ヶ月平均",                    up:true, color:PURPLE, bg:PURPLE_L,  border:"#DDD6FE" },
   ];
   const recentOrders = [
     { id:"ORD-2041", customer:"大阪モーター整備",     part:"フロントコントロールアーム左", amount:9300,  margin:19.4, grossAmt:1804, date:"04/07", status:"発送済",   staff:"小嶋" },
@@ -2033,7 +2040,7 @@ function SalesDashboard() {
   return (
     <div className="anim-fade-up" style={{ display:"flex", flexDirection:"column", gap:16 }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div style={{ fontSize:13, color:GRAY }}>2025年4月 〜 2025年9月（速報）</div>
+        <div style={{ fontSize:13, color:GRAY }}>2026年10月 〜 2027年9月（速報）</div>
         <div style={{ display:"flex", gap:6 }}>
           {["月次","四半期"].map(p => (
             <button key={p} onClick={() => setPeriod(p)} style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontWeight:500, cursor:"pointer", background:period===p?R:WHITE, color:period===p?WHITE:GRAY, border:`1px solid ${period===p?R:BORDER}`, fontFamily:"inherit" }}>{p}</button>
@@ -2126,7 +2133,7 @@ function SalesDashboard() {
           </div>
           <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${BORDER}` }}>
             <div style={{ fontSize:11, color:GRAY_L, marginBottom:4 }}>今月合計</div>
-            <div style={{ fontSize:20, fontWeight:700, color:DARK, fontFamily:"JetBrains Mono" }}>¥3,140,000</div>
+            <div style={{ fontSize:20, fontWeight:700, color:DARK, fontFamily:"JetBrains Mono" }}>¥8,500,000</div>
           </div>
         </div>
       </div>
