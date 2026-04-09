@@ -2136,9 +2136,7 @@ function SalesDashboard() {
             <div style={{ fontSize:20, fontWeight:700, color:DARK, fontFamily:"JetBrains Mono" }}>¥8,500,000</div>
           </div>
         </div>
-      </div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-        <div style={{ ...S, padding:20 }}>
+         <div style={{ ...S, padding:20 }}>
           <div style={{ fontSize:13, fontWeight:600, color:DARK, marginBottom:14 }}>顧客別売上ランキング（今月）</div>
           {topCustomers.map((c, i) => (
             <div key={c.name} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:i<topCustomers.length-1?`1px solid ${BORDER}`:"none" }}>
